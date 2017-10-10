@@ -15,8 +15,3 @@ ADD . /usr/src/app
 
 # run server
 CMD gunicorn -b 0.0.0.0:5000 manage:app --reload
-
-# CMD python manage.py runserver -h 0.0.0.0
-
-# CMD export FLASK_APP=project/__init__.py
-# CMD flask run --host=0.0.0.0
