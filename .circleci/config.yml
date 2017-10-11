@@ -54,7 +54,7 @@ jobs:
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       - run:
-          name: Before Script 3
+          name: Before Script
           command: |
             python manage.py recreate_db
 
