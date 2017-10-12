@@ -12,6 +12,7 @@ jobs:
         environment:
           APP_SETTINGS: project.config.TestingConfig
           DATABASE_TEST_URL: postgres://postgres@localhost:5432/flask_base_test
+          SECRET_KEY: my_secret
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
