@@ -26,3 +26,5 @@ six==1.11.0
 Werkzeug==0.12.2
 flask-bcrypt==0.7.1
 pyjwt==1.5.3
+celery==4.1.0
+redis==2.10.6

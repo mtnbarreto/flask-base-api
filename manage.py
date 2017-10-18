@@ -61,5 +61,11 @@ def cov():
         return 0
     return 1
 
+@manager.command
+def local_env_vars():
+    print("export SECRET_KEY='mysecret'")
+    print("export DATABASE_TEST_URL='postgres://postgres:postgres@localhost:5432/flask_base_test'")
+    print("export DATABASE_URL='postgres://postgres:postgres@localhost:5432/flask_base_dev'")
+
 if __name__ == '__main__':
     manager.run()
