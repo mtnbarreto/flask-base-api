@@ -6,7 +6,7 @@ import coverage
 from flask_script import Manager
 from flask_migrate import MigrateCommand
 
-from project import create_app, db
+from project import app, db, celery
 from project.api.models import User
 
 COV = coverage.coverage(
@@ -18,8 +18,6 @@ COV = coverage.coverage(
 )
 COV.start()
 
-
-app = create_app()
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
@@ -63,9 +61,12 @@ def cov():
 
 @manager.command
 def local_env_vars():
+    print("export APP_SETTINGS=project.config.DevelopmentConfig")
     print("export SECRET_KEY='mysecret'")
     print("export DATABASE_TEST_URL='postgres://postgres:postgres@localhost:5432/flask_base_test'")
     print("export DATABASE_URL='postgres://postgres:postgres@localhost:5432/flask_base_dev'")
+    print("export CELERY_BROKER_URL='amqp://'")
+    print("export CELERY_RESULT_BACKEND='rpc://'")
 
 if __name__ == '__main__':
     manager.run()
