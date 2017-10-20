@@ -6,16 +6,19 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
+from flask_mail import Mail
+from twilio.rest import Client
 from celery import Celery
 
 # instantiate the extesnions
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
+mail = Mail()
 
 def create_app():
     # instantiate the app
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder='./templates')
 
     # set config
     app_settings = os.getenv('APP_SETTINGS')
@@ -27,6 +30,7 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
 
     # register blueprints
     from project.api.auth import auth_blueprint
@@ -53,3 +57,4 @@ def make_celery(app):
 
 app = create_app()
 celery = make_celery(app)
+twilio_client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])

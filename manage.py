@@ -40,7 +40,7 @@ def recreate_db():
 @manager.command
 def seed_db():
     """Seeds the database."""
-    db.session.add(User(username='martin', email="mtn.barreto@gmail.com", password="password"))
+    db.session.add(User(username='martin', email="mtn.barreto@gmail.com", password="password", cell_phone_number="+59898983510"))
     db.session.add(User(username='barreto', email="barretomartin1984@gmail.com", password="password"))
     db.session.commit()
 
@@ -59,14 +59,26 @@ def cov():
         return 0
     return 1
 
+
+from project.api.utils.mails import send_email
+
 @manager.command
-def local_env_vars():
-    print("export APP_SETTINGS=project.config.DevelopmentConfig")
-    print("export SECRET_KEY='mysecret'")
-    print("export DATABASE_TEST_URL='postgres://postgres:postgres@localhost:5432/flask_base_test'")
-    print("export DATABASE_URL='postgres://postgres:postgres@localhost:5432/flask_base_dev'")
-    print("export CELERY_BROKER_URL='amqp://'")
-    print("export CELERY_RESULT_BACKEND='rpc://'")
+def send_test_email():
+    """Send test email with envoronment configuration."""
+    send_email("Welcome to Flask Base Api! Martin",
+               sender = "mtn.barreto@gmail.com",
+               recipients = ["mtn.barreto@gmail.com"],
+               text_body = "Hello",
+               html_body = "<body><h4>Hello</h4></body>")
+
+
+from project.api.utils.twilio import send_account_verification_code
+
+@manager.command
+def send_test_sms():
+    """Send test sms with envoronment configuration."""
+    user = db.session.query(User).filter(User.username == 'martin').first()
+    send_account_verification_code(user = user)
 
 if __name__ == '__main__':
     manager.run()

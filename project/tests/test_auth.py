@@ -202,7 +202,6 @@ class TestAuthBlueprint(BaseTestCase):
                 )
             )
             data = json.loads(response.data.decode())
-            print(data)
             self.assertTrue(data['status'] == 'error')
             self.assertTrue(
                 data['message'] == 'Signature expired. Please log in again.')
