@@ -2,9 +2,9 @@ import json
 import time
 
 from project import db
-from project.api.models import User
-from project.tests.base import BaseTestCase
-from project.tests.utils import add_user
+from project.models.models import User
+from tests.base import BaseTestCase
+from tests.utils import add_user
 
 
 class TestAuthBlueprint(BaseTestCase):
@@ -12,7 +12,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_user_registration(self):
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(
                     username='justatest',
                     email='test@test.com',
@@ -31,7 +31,7 @@ class TestAuthBlueprint(BaseTestCase):
         add_user('test', 'test@test.com', 'test')
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(
                     username='michael',
                     email='test@test.com',
@@ -49,7 +49,7 @@ class TestAuthBlueprint(BaseTestCase):
         add_user('test', 'test@test.com', 'test')
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(
                     username='test',
                     email='test@test.com2',
@@ -66,7 +66,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_user_registration_invalid_json(self):
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict()),
                 content_type='application/json'
             )
@@ -78,7 +78,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_user_registration_invalid_json_keys_no_username(self):
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(email='test@test.com', password='test')),
                 content_type='application/json',
             )
@@ -90,7 +90,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_user_registration_invalid_json_keys_no_email(self):
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(
                     username='justatest', password='test')),
                 content_type='application/json',
@@ -103,7 +103,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_user_registration_invalid_json_keys_no_password(self):
         with self.client:
             response = self.client.post(
-                '/auth/register',
+                '/v1/auth/register',
                 data=json.dumps(dict(
                     username='justatest', email='test@test.com')),
                 content_type='application/json',
@@ -121,7 +121,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             user = add_user('test', 'test@test.com', 'test')
             response = self.client.post(
-                '/auth/login',
+                '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
                     password='test'
@@ -138,7 +138,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_not_registered_user_login(self):
         with self.client:
             response = self.client.post(
-                '/auth/login',
+                '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
                     password='test'
@@ -158,7 +158,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             # user login
             resp_login = self.client.post(
-                '/auth/login',
+                '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
                     password='test'
@@ -167,7 +167,7 @@ class TestAuthBlueprint(BaseTestCase):
             )
             # valid token logout
             response = self.client.get(
-                '/auth/logout',
+                '/v1/auth/logout',
                 headers=dict(
                     Authorization='Bearer ' + json.loads(
                         resp_login.data.decode()
@@ -184,7 +184,7 @@ class TestAuthBlueprint(BaseTestCase):
         add_user('test', 'test@test.com', 'test')
         with self.client:
             resp_login = self.client.post(
-                '/auth/login',
+                '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
                     password='test'
@@ -194,7 +194,7 @@ class TestAuthBlueprint(BaseTestCase):
             # invalid token logout
             time.sleep(4)
             response = self.client.get(
-                '/auth/logout',
+                '/v1/auth/logout',
                 headers=dict(
                     Authorization='Bearer ' + json.loads(
                         resp_login.data.decode()
@@ -210,7 +210,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_invalid_logout(self):
         with self.client:
             response = self.client.get(
-                '/auth/logout',
+                '/v1/auth/logout',
                 headers=dict(Authorization='Bearer invalid'))
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')
@@ -224,7 +224,7 @@ class TestAuthBlueprint(BaseTestCase):
         add_user('test', 'test@test.com', 'test')
         with self.client:
             resp_login = self.client.post(
-                '/auth/login',
+                '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
                     password='test'
@@ -232,7 +232,7 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             response = self.client.get(
-                '/auth/status',
+                '/v1/auth/status',
                 headers=dict(
                     Authorization='Bearer ' + json.loads(
                         resp_login.data.decode()
@@ -253,7 +253,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_invalid_status(self):
         with self.client:
             response = self.client.get(
-                '/auth/status',
+                '/v1/auth/status',
                 headers=dict(Authorization='Bearer invalid'))
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')

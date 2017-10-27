@@ -7,13 +7,13 @@ from flask_script import Manager
 from flask_migrate import MigrateCommand
 
 from project import app, db, celery
-from project.api.models import User
+from project.models.models import User
 
 COV = coverage.coverage(
     branch=True,
     include='project/*',
     omit=[
-        'project/tests/*'
+        'project/static/*'
     ]
 )
 COV.start()
@@ -24,7 +24,7 @@ manager.add_command('db', MigrateCommand)
 @manager.command
 def test():
     """Runs the tests without code coverage."""
-    tests = unittest.TestLoader().discover('project/tests', pattern='test*.py')
+    tests = unittest.TestLoader().discover('tests', pattern='test*.py')
     result = unittest.TextTestRunner(verbosity=2).run(tests)
     if result.wasSuccessful():
         return 0
@@ -60,7 +60,7 @@ def cov():
     return 1
 
 
-from project.api.utils.mails import send_email
+from project.utils.mails import send_email
 
 @manager.command
 def send_test_email():
@@ -72,7 +72,7 @@ def send_test_email():
                html_body = "<body><h4>Hello</h4></body>")
 
 
-from project.api.utils.twilio import send_account_verification_code
+from project.utils.twilio import send_account_verification_code
 
 @manager.command
 def send_test_sms():

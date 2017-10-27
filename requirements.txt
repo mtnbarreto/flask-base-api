@@ -30,3 +30,4 @@ pyjwt==1.5.3
 celery==4.1.0
 redis==2.10.6
 twilio==6.8.0
+flask-cors==3.0.3

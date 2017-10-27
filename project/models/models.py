@@ -1,4 +1,4 @@
-# project/api/models.py
+# project/models/models.py
 
 import datetime
 import jwt

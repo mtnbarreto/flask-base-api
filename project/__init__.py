@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from twilio.rest import Client
 from celery import Celery
+from flask_cors import CORS
 
 # instantiate the extesnions
 db = SQLAlchemy()
@@ -18,7 +19,10 @@ mail = Mail()
 
 def create_app():
     # instantiate the app
-    app = Flask(__name__, template_folder='./templates')
+    app = Flask(__name__, template_folder='./templates', static_folder='./static')
+
+    # enable CORS
+    CORS(app)
 
     # set config
     app_settings = os.getenv('APP_SETTINGS')
@@ -33,10 +37,10 @@ def create_app():
     mail.init_app(app)
 
     # register blueprints
-    from project.api.auth import auth_blueprint
-    from project.api.users import users_blueprint
-    app.register_blueprint(auth_blueprint)
-    app.register_blueprint(users_blueprint)
+    from project.api.v1.auth import auth_blueprint
+    from project.api.v1.users import users_blueprint
+    app.register_blueprint(auth_blueprint, url_prefix='/v1')
+    app.register_blueprint(users_blueprint, url_prefix='/v1')
 
     return app
 

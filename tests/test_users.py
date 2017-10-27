@@ -4,9 +4,9 @@ import json
 import datetime
 
 from project import db
-from project.tests.base import BaseTestCase
-from project.api.models import User
-from project.tests.utils import add_user
+from tests.base import BaseTestCase
+from project.models.models import User
+from tests.utils import add_user
 
 
 class TestUserService(BaseTestCase):
@@ -15,7 +15,7 @@ class TestUserService(BaseTestCase):
 
     def test_users(self):
         """Ensure the /ping route behaves correctly."""
-        response = self.client.get('/ping')
+        response = self.client.get('/v1/ping')
         data = json.loads(response.data.decode())
         self.assertEqual(response.status_code, 200)
         self.assertIn('pong!', data['message'])
@@ -26,7 +26,7 @@ class TestUserService(BaseTestCase):
         """Ensure a new user can be added to the database."""
         with self.client:
             response = self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict(
                     username='michael',
                     email='michael@realpython.com',
@@ -45,7 +45,7 @@ class TestUserService(BaseTestCase):
         """Ensure error is thrown if the JSON object is empty."""
         with self.client:
             response = self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict()),
                 content_type='application/json',
             )
@@ -58,7 +58,7 @@ class TestUserService(BaseTestCase):
         """Ensure error is thrown if the JSON object does not have a username key."""
         with self.client:
             response = self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict(email='michael@realpython.com', password='password')),
                 content_type='application/json',
             )
@@ -71,7 +71,7 @@ class TestUserService(BaseTestCase):
         """Ensure error is thrown if the email already exists."""
         with self.client:
             self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict(
                     username='michael',
                     email='michael@realpython.com',
@@ -80,7 +80,7 @@ class TestUserService(BaseTestCase):
                 content_type='application/json',
             )
             response = self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict(
                     username='michael',
                     email='michael@realpython.com',
@@ -100,7 +100,7 @@ class TestUserService(BaseTestCase):
         """Ensure get single user behaves correctly."""
         user = add_user('michael', 'michael@realpython.com', 'password')
         with self.client:
-            response = self.client.get(f'/users/{user.id}')
+            response = self.client.get(f'/v1/users/{user.id}')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertTrue('created_at' in data['data'])
@@ -112,7 +112,7 @@ class TestUserService(BaseTestCase):
     def test_single_user_no_id(self):
         """Ensure error is thrown if an id is not provided."""
         with self.client:
-            response = self.client.get('/users/blah')
+            response = self.client.get('/v1/users/blah')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist', data['message'])
@@ -121,7 +121,7 @@ class TestUserService(BaseTestCase):
     def test_single_user_incorrect_id(self):
         """Ensure error is thrown if the id does not exist."""
         with self.client:
-            response = self.client.get('/users/999')
+            response = self.client.get('/v1/users/999')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist', data['message'])
@@ -134,7 +134,7 @@ class TestUserService(BaseTestCase):
         add_user('michael', 'michael@realpython.com', 'password', created)
         add_user('fletcher', 'fletcher@realpython.com', 'password')
         with self.client:
-            response = self.client.get('/users')
+            response = self.client.get('/v1/users')
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data['data']['users']), 2)
@@ -153,7 +153,7 @@ class TestUserService(BaseTestCase):
         """Ensure error is thrown if the JSON object does not have a password key."""
         with self.client:
             response = self.client.post(
-                '/users',
+                '/v1/users',
                 data=json.dumps(dict(
                     username='michael',
                     email='michael@realpython.com')),
