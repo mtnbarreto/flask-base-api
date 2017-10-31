@@ -6,6 +6,28 @@ import jwt
 from flask import current_app
 from project import db, bcrypt
 
+
+class Device(db.Model):
+    __tablename__ = "devices"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    device_id = db.Column(db.String(128), unique=True, nullable=False)
+    device_type = db.Column(db.String(128), nullable=False)
+    pn_token = db.Column(db.String(128), unique=True, nullable=False)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('devices', lazy='joined'))
+
+    def __init__(self, device_id, pn_token, user=None):
+        self.device_id = device_id
+        self.device_type = "apple"
+        self.pn_token = pn_token
+        self.user = user
+        self.created_at = datetime.datetime.utcnow()
+        self.updated_at = self.created_at
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -17,6 +39,7 @@ class User(db.Model):
     active = db.Column(db.Boolean, default=True, nullable=False)
     admin = db.Column(db.Boolean, default=False, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, username, email, password, created_at=datetime.datetime.utcnow(), cell_phone_number=None):
@@ -24,6 +47,7 @@ class User(db.Model):
         self.email = email
         self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         self.created_at = created_at
+        self.updated_at = created_at
         self.cell_phone_number = cell_phone_number
 
 

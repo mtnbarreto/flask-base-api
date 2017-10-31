@@ -1,10 +1,14 @@
 # project/config.py
 import os
+import logging
 
 class BaseConfig:
     """Base configuration"""
     DEBUG = False
     TESTING = False
+    LOGGING_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LOGGING_LOCATION = 'flask-base.log'
+    LOGGING_LEVEL = logging.DEBUG
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.environ.get('SECRET_KEY')
     BCRYPT_LOG_ROUNDS = 13
@@ -22,7 +26,7 @@ class BaseConfig:
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_FROM_NUMBER = "+15102963250"
-
+    SENTRY_DSN = 'Sentry_DNS'
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration"""
@@ -45,3 +49,4 @@ class ProductionConfig(BaseConfig):
     """Production configuration"""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SENTRY_DSN = 'Sentry_DNS'
