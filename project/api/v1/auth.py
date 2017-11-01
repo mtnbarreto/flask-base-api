@@ -14,11 +14,7 @@ def register_user():
     # get post data
     post_data = request.get_json()
     if not post_data:
-        response_object = {
-            'status': 'error',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
+        raise exceptions.InvalidPayload()
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
@@ -44,19 +40,11 @@ def register_user():
             }
             return jsonify(response_object), 201
         else:
-            response_object = {
-                'status': 'error',
-                'message': 'Sorry. That user already exists.'
-            }
-            return jsonify(response_object), 400
+            raise exceptions.BusinessException(message='Sorry. That user already exists.')
     # handler errors
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
-        response_object = {
-            'status': 'error',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
+        raise exceptions.InvalidPayload()
 
 
 @auth_blueprint.route('/auth/login', methods=['POST'])
@@ -64,11 +52,7 @@ def login_user():
     # get post data
     post_data = request.get_json()
     if not post_data:
-        response_object = {
-            'status': 'error',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
+        raise exceptions.InvalidPayload()
     email = post_data.get('email')
     password = post_data.get('password')
     try:
