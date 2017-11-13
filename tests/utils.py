@@ -2,8 +2,9 @@
 
 import datetime
 
-from project import db
+from project import db, app
 from project.models.models import User, Device, UserRole
+from project import bcrypt
 
 
 def add_user(username, email, password, created_at=datetime.datetime.utcnow(), roles=UserRole.USER):
@@ -17,3 +18,8 @@ def add_device(device_id, device_type, active=True, pn_token=None, user=None, cr
     db.session.add(device)
     db.session.commit()
     return device
+
+def set_user_token_pw_hash(user, token):
+    user.pw_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+    db.session.commit()
+    return user
