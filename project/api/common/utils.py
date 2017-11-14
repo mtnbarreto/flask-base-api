@@ -3,7 +3,22 @@
 from flask import jsonify, request, abort
 from functools import wraps
 from project.api.common import exceptions
-from project.models.models import User
+from project.models.models import User, UserRole
+
+
+def privileges(roles):
+    def actual_decorator(f):
+        @wraps(f)
+        def decorated_function(logged_user_id, *args, **kwargs):
+            user = User.get(logged_user_id)
+            if not user or not user.active:
+                raise exceptions.UnautorizedException(message='Something went wrong. Please contact us.')
+            user_roles = UserRole(user.roles)
+            if not bool(user_roles & roles):
+                raise exceptions.ForbiddenException()
+            return f(logged_user_id, *args, **kwargs)
+        return decorated_function
+    return actual_decorator
 
 def authenticate(f):
     @wraps(f)

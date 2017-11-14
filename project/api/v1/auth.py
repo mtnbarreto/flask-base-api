@@ -3,10 +3,10 @@
 from flask import Blueprint, jsonify, request, abort, redirect, url_for
 from sqlalchemy import exc, or_
 
-from project.models.models import User, Device
+from project.models.models import User, Device, UserRole
 from project import db, bcrypt
 from project.api.common import exceptions
-from project.api.common.utils import authenticate
+from project.api.common.utils import authenticate, privileges
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -102,6 +102,7 @@ def login_user():
 
 @auth_blueprint.route('/auth/logout', methods=['GET'])
 @authenticate
+@privileges(roles = UserRole.USER | UserRole.USER_ADMIN | UserRole.BACKEND_ADMIN)
 def logout_user(user_id):
     device_id = request.headers.get('X-Device-Id')
     device = Device.first_by(device_id=device_id)

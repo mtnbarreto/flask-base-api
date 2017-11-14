@@ -2,24 +2,15 @@
 
 from flask import Flask, Blueprint, jsonify, request, render_template
 
-from project.models.models import User
+from project.models.models import User, UserRole
 from project import db
 from sqlalchemy import exc, or_
+from project.api.common.utils import authenticate, privileges
 
-from project.api.common.utils import authenticate
+from project.api.common import exceptions
 
 
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
-
-# @users_blueprint.route('/', methods=['GET', 'POST'])
-# def index():
-#     if request.method == 'POST':
-#         username = request.form['username']
-#         email = request.form['email']
-#         db.session.add(User(username=username, email=email))
-#         db.session.commit()
-#     users = User.query.order_by(User.created_at.desc()).all()
-#     return render_template('index.html', users=users)
 
 @users_blueprint.route('/ping', methods=['GET'])
 def ping_pong():
@@ -30,14 +21,11 @@ def ping_pong():
 
 @users_blueprint.route('/users', methods=['POST'])
 @authenticate
-def add_user(user_id):
+@privileges(roles=UserRole.BACKEND_ADMIN)
+def add_user(logged_in_user):
     post_data = request.get_json()
     if not post_data:
-        response_object = {
-            'status': 'fail',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
+        raise exceptions.InvalidPayload()
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
@@ -54,31 +42,20 @@ def add_user(user_id):
             }
             return jsonify(response_object), 201
         else:
-            response_object = {
-                'status': 'fail',
-                'message': 'Sorry. That email or username already exists.'
-            }
-            return jsonify(response_object), 400
+            raise exceptions.BusinessException(message='Sorry. That email or username already exists.', status_code=400)
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
-        response_object = {
-            'status': 'fail',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
-
+        raise exceptions.InvalidPayload()
 
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
-def get_single_user(user_id):
+@authenticate
+@privileges(roles=UserRole.BACKEND_ADMIN)
+def get_single_user(logged_in_user, user_id):
     """Get single user details"""
-    response_object = {
-        'status': 'fail',
-        'message': 'User does not exist'
-    }
     try:
         user = User.get(id=int(user_id))
         if not user:
-            return jsonify(response_object), 404
+            raise exceptions.NotFoundException(message='User does not exist.')
         else:
             response_object = {
                 'status': 'success',
@@ -90,12 +67,13 @@ def get_single_user(user_id):
             }
             return jsonify(response_object), 200
     except ValueError:
-        return jsonify(response_object), 404
-
+        raise exceptions.NotFoundException(message='User does not exist.')
 
 
 @users_blueprint.route('/users', methods=['GET'])
-def get_all_users():
+@authenticate
+@privileges(roles=UserRole.BACKEND_ADMIN)
+def get_all_users(*unused):
     """Get all users"""
     users = User.query.order_by(User.created_at.desc()).all()
     users_list = []

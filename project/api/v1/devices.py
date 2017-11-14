@@ -26,14 +26,14 @@ def add_apns_device(user_id):
             return jsonify(response_object), 201
         else:
             response_object = {
-                'status': 'fail',
+                'status': 'error',
                 'message': 'Sorry. That email already exists.'
             }
             return jsonify(response_object), 400
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
         response_object = {
-            'status': 'fail',
+            'status': 'error',
             'message': 'Invalid payload.'
         }
         return jsonify(response_object), 400

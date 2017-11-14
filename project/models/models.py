@@ -2,10 +2,16 @@
 
 
 import jwt
+from enum import IntFlag
 from datetime import datetime, timedelta
 from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
+
+class UserRole(IntFlag):
+    USER  = 1
+    USER_ADMIN = 2
+    BACKEND_ADMIN = 4
 
 class Device(db.Model):
     __tablename__ = "devices"
@@ -13,7 +19,6 @@ class Device(db.Model):
     device_id = db.Column(db.String(128), unique=True, nullable=False)
     device_type = db.Column(db.String(128), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
-    is_admin = db.Column(db.Boolean, default=False, nullable=False)
     pn_token = db.Column(db.String(128), unique=True, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', backref=db.backref('devices', lazy='joined'))
@@ -57,20 +62,20 @@ class User(db.Model):
     username = db.Column(db.String(128), unique=True, nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
-    admin = db.Column(db.Boolean, default=False, nullable=False)
+    roles = db.Column(db.Integer, default=UserRole.USER.value, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-    def __init__(self, username, email, password, created_at=datetime.utcnow(), cell_phone_number=None):
+    def __init__(self, username, email, password, created_at=datetime.utcnow(), cell_phone_number=None, roles=UserRole.USER):
         self.username = username
         self.email = email
         self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         self.created_at = created_at
         self.updated_at = created_at
         self.cell_phone_number = cell_phone_number
-
+        self.roles = roles.value
 
     def encode_auth_token(self, user_id):
         """Generates the auth token"""

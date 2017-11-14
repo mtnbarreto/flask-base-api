@@ -80,6 +80,8 @@ def create_app():
     app.register_error_handler(exceptions.InvalidPayload, error_handlers.handle_exception)
     app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.UnautorizedException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     global celery
     celery = __make_celery(app)
     global twilio_client

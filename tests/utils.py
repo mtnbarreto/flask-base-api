@@ -3,11 +3,11 @@
 import datetime
 
 from project import db
-from project.models.models import User, Device
+from project.models.models import User, Device, UserRole
 
 
-def add_user(username, email, password, created_at=datetime.datetime.utcnow()):
-    user = User(username=username, email=email, password=password, created_at=created_at)
+def add_user(username, email, password, created_at=datetime.datetime.utcnow(), roles=UserRole.USER):
+    user = User(username=username, email=email, password=password, created_at=created_at, roles=roles)
     db.session.add(user)
     db.session.commit()
     return user
