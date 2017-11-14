@@ -35,15 +35,16 @@ class Device(db.Model):
         self.updated_at = created_at
 
     @staticmethod
-    def create_or_update(device_id, device_type, user, active=True, commit=False):
-        device = Device.query.filter_by(device_id = device_id)
+    def create_or_update(device_id, device_type, user, active=True, pn_token=None, commit=False):
+        device = Device.first_by(device_id = device_id)
         if not device:
-            device = Device(device_id=device_id, device_type=device_type, user=user, active=active)
+            device = Device(device_id=device_id, device_type=device_type, user=user, active=active, pn_token=pn_token)
             db.session.add(device)
         else:
             device.device_type = device_type
             device.user = user
             device.active = active
+            device.pn_token = pn_token
         if commit:
             db.session.commit()
         device
