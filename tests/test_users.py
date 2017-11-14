@@ -2,6 +2,7 @@
 
 import json
 import datetime
+import uuid
 
 from project import db
 from tests.base import BaseTestCase
@@ -24,7 +25,17 @@ class TestUserService(BaseTestCase):
 
     def test_add_user(self):
         """Ensure a new user can be added to the database."""
+        add_user('test', 'test@test.com', 'test')
         with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email='test@test.com',
+                    password='test',
+                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                )),
+                content_type='application/json'
+            )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(
@@ -33,6 +44,11 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 201)
@@ -43,11 +59,26 @@ class TestUserService(BaseTestCase):
 
     def test_add_user_invalid_json(self):
         """Ensure error is thrown if the JSON object is empty."""
+        add_user('test', 'test@test.com', 'test')
         with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email='test@test.com',
+                    password='test',
+                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                )),
+                content_type='application/json'
+            )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict()),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -56,11 +87,26 @@ class TestUserService(BaseTestCase):
 
     def test_add_user_invalid_json_keys(self):
         """Ensure error is thrown if the JSON object does not have a username key."""
+        add_user('test', 'test@test.com', 'test')
         with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email='test@test.com',
+                    password='test',
+                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                )),
+                content_type='application/json'
+            )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(email='michael@realpython.com', password='password')),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -69,7 +115,17 @@ class TestUserService(BaseTestCase):
 
     def test_add_user_duplicate_user(self):
         """Ensure error is thrown if the email already exists."""
+        add_user('test', 'test@test.com', 'test')
         with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email='test@test.com',
+                    password='test',
+                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                )),
+                content_type='application/json'
+            )
             self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(
@@ -78,6 +134,11 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             response = self.client.post(
                 '/v1/users',
@@ -87,11 +148,16 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
             self.assertIn(
-                'Sorry. That email already exists.', data['message'])
+                'Sorry. That email or username already exists.', data['message'])
             self.assertIn('fail', data['status'])
 
 
@@ -151,48 +217,30 @@ class TestUserService(BaseTestCase):
 
     def test_add_user_invalid_json_keys_no_password(self):
         """Ensure error is thrown if the JSON object does not have a password key."""
+        add_user('test', 'test@test.com', 'test')
         with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email='test@test.com',
+                    password='test',
+                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                )),
+                content_type='application/json'
+            )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(
                     username='michael',
                     email='michael@realpython.com')),
                 content_type='application/json',
+                headers=dict(
+                    Authorization='Bearer ' + json.loads(
+                        resp_login.data.decode()
+                    )['auth_token']
+                )
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
             self.assertIn('Invalid payload.', data['message'])
             self.assertIn('fail', data['status'])
-
-
-    # def test_main_no_users(self):
-    #     """Ensure the main route behaves correctly when no users have been added to the database."""
-    #     response = self.client.get('/')
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertIn(b'<h1>All Users</h1>', response.data)
-    #     self.assertIn(b'<p>No users!</p>', response.data)
-
-    # def test_main_with_users(self):
-    #     """Ensure the main route behaves correctly when users have been added to the database."""
-    #     add_user('michael', 'michael@realpython.com', 'password')
-    #     add_user('fletcher', 'fletcher@realpython.com', 'password')
-    #     response = self.client.get('/')
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertIn(b'<h1>All Users</h1>', response.data)
-    #     self.assertNotIn(b'<p>No users!</p>', response.data)
-    #     self.assertIn(b'<strong>michael</strong>', response.data)
-    #     self.assertIn(b'<strong>fletcher</strong>', response.data)
-
-    #
-    # def test_main_add_user(self):
-    #     """Ensure a new user can be added to the database."""
-    #     with self.client:
-    #         response = self.client.post(
-    #             '/',
-    #             data=dict(username='michael', email='michael@realpython.com'),
-    #             follow_redirects=True
-    #         )
-    #         self.assertEqual(response.status_code, 200)
-    #         self.assertIn(b'<h1>All Users</h1>', response.data)
-    #         self.assertNotIn(b'<p>No users!</p>', response.data)
-    #         self.assertIn(b'<strong>michael</strong>', response.data)

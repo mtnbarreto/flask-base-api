@@ -1,22 +1,21 @@
 # project/api/devices.py
 
+from project.api.common import exceptions
+
 devices_blueprint = Blueprint('devices', __name__, template_folder='../templates/devices')
 
 
-@devices_blueprint.route('/devices/apns', methods=['POST'])
-def add_apns_device():
+@devices_blueprint.route('/devices', methods=['POST'])
+@authenticate
+def add_apns_device(user_id):
     post_data = request.get_json()
     if not post_data:
-        response_object = {
-            'status': 'fail',
-            'message': 'Invalid payload.'
-        }
-        return jsonify(response_object), 400
-    device_id = post_data.get('device_id')
-    pn_token = post_data.get('pn_token')
-    password = post_data.get('password')
+        return exceptions.InvalidPayload()
+    device_id   = post_data.get('device_id')
+    device_type = post_data.get('device_type')
+    pn_token    = post_data.get('pn_token')
     try:
-        user = User.query.filter_by(email=email).first()
+        user = User.first_by(email=email)
         if not user:
             db.session.add(User(username=username, email=email, password=password))
             db.session.commit()

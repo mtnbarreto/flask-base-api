@@ -29,6 +29,20 @@ class BusinessException(Exception):
         rv['status'] = 'error'
         return rv
 
+class UnautorizedException(Exception):
+
+    def __init__(self, message='Not authorized.', payload=None):
+        Exception.__init__(self)
+        self.message = message
+        self.status_code = 401
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        rv['status'] = 'error'
+        return rv
+
 class InvalidUsage(Exception):
     #status_code = 400
 

@@ -4,7 +4,9 @@ from flask import Flask, Blueprint, jsonify, request, render_template
 
 from project.models.models import User
 from project import db
-from sqlalchemy import exc
+from sqlalchemy import exc, or_
+
+from project.api.common.utils import authenticate
 
 
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
@@ -27,7 +29,8 @@ def ping_pong():
     })
 
 @users_blueprint.route('/users', methods=['POST'])
-def add_user():
+@authenticate
+def add_user(user_id):
     post_data = request.get_json()
     if not post_data:
         response_object = {
@@ -38,10 +41,12 @@ def add_user():
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
+
     try:
-        user = User.query.filter_by(email=email).first()
+        user = User.first(or_(User.username == username, User.email == email))
         if not user:
-            db.session.add(User(username=username, email=email, password=password))
+            userModel = User(username=username, email=email, password=password)
+            db.session.add(userModel)
             db.session.commit()
             response_object = {
                 'status': 'success',
@@ -51,7 +56,7 @@ def add_user():
         else:
             response_object = {
                 'status': 'fail',
-                'message': 'Sorry. That email already exists.'
+                'message': 'Sorry. That email or username already exists.'
             }
             return jsonify(response_object), 400
     except (exc.IntegrityError, ValueError) as e:
@@ -71,7 +76,7 @@ def get_single_user(user_id):
         'message': 'User does not exist'
     }
     try:
-        user = User.query.filter_by(id=int(user_id)).first()
+        user = User.get(id=int(user_id))
         if not user:
             return jsonify(response_object), 404
         else:
