@@ -13,7 +13,6 @@ from tests.utils import add_user
 class TestUserService(BaseTestCase):
     """Tests for the Users Service."""
 
-
     def test_users(self):
         """Ensure the /ping route behaves correctly."""
         response = self.client.get('/v1/ping')

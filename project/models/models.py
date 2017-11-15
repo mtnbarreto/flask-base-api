@@ -8,6 +8,44 @@ from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
 
+class EventDescriptor(db.Model):
+    __tablename__ = "event_descriptors"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(128), nullable=False)
+    description = db.Column(db.String(128), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+
+class Event(db.Model):
+    __tablename__ = "events"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    event_descriptor_id = db.Column(db.Integer, db.ForeignKey('event_descriptors.id'), nullable=False)
+    event_descriptor = db.relationship('EventDescriptor', backref=db.backref('events', lazy='joined'))
+
+    entity_type = db.Column(db.String(128))
+    entity_id =  db.Column(db.Integer)
+    entity_description = db.Column(db.String(128))
+    entity_2_type = db.Column(db.String(128))
+    entity_2_id =  db.Column(db.Integer)
+    entity_2_description = db.Column(db.String(128))
+    entity_3_type = db.Column(db.String(128))
+    entity_3_id =  db.Column(db.Integer)
+    entity_3_description = db.Column(db.String(128))
+    expiration_date =  db.Column(db.DateTime)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    creator = db.relationship('User', backref=db.backref('events', lazy='joined'))
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __init__(self, event_descriptor_id):
+        self.event_descriptor_id = event_descriptor_id
+
 class UserRole(IntFlag):
     USER  = 1
     USER_ADMIN = 2
@@ -19,8 +57,8 @@ class Device(db.Model):
     device_id = db.Column(db.String(128), unique=True, nullable=False)
     device_type = db.Column(db.String(128), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
-    pn_token = db.Column(db.String(128), unique=True, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    pn_token = db.Column(db.String(128), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref=db.backref('devices', lazy='joined'))
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -57,9 +95,9 @@ class Device(db.Model):
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    first_name = db.Column(db.String(128), nullable=True)
-    last_name = db.Column(db.String(128), nullable=True)
-    cell_phone_number = db.Column(db.String(128), nullable=True)
+    first_name = db.Column(db.String(128))
+    last_name = db.Column(db.String(128))
+    cell_phone_number = db.Column(db.String(128))
     username = db.Column(db.String(128), unique=True, nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
