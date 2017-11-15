@@ -42,7 +42,7 @@ def add_user(logged_in_user):
             }
             return jsonify(response_object), 201
         else:
-            raise exceptions.BusinessException(message='Sorry. That email or username already exists.', status_code=400)
+            raise exceptions.BusinessException(message='Sorry. That email or username already exists.')
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
         raise exceptions.InvalidPayload()

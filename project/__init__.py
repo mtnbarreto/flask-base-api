@@ -77,7 +77,6 @@ def create_app():
     # register error handlers
     from project.api.common import exceptions
     from project.api.common import error_handlers
-    app.register_error_handler(exceptions.InvalidUsage, error_handlers.handle_exception)
     app.register_error_handler(exceptions.InvalidPayload, error_handlers.handle_exception)
     app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.UnautorizedException, error_handlers.handle_exception)
