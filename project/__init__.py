@@ -69,16 +69,19 @@ def create_app():
     # register blueprints
     from project.api.v1.auth import auth_blueprint
     from project.api.v1.users import users_blueprint
+    from project.api.v1.devices import devices_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/v1')
     app.register_blueprint(users_blueprint, url_prefix='/v1')
-
+    app.register_blueprint(devices_blueprint, url_prefix='/v1')
 
     # register error handlers
     from project.api.common import exceptions
     from project.api.common import error_handlers
-    app.register_error_handler(exceptions.InvalidUsage, error_handlers.handle_invalid_usage)
     app.register_error_handler(exceptions.InvalidPayload, error_handlers.handle_exception)
     app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.UnautorizedException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     global celery
     celery = __make_celery(app)
     global twilio_client
