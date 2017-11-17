@@ -5,7 +5,8 @@ import uuid
 from project import db
 from project.models.models import User
 from tests.base import BaseTestCase
-from tests.utils import add_user, set_user_token_pw_hash
+from tests.utils import add_user
+from tests.utils import set_user_token_hash
 
 class TestAuthBlueprint(BaseTestCase):
 
@@ -307,10 +308,6 @@ class TestAuthBlueprint(BaseTestCase):
                 data['message'] == 'Something went wrong. Please contact us.')
             self.assertEqual(response.status_code, 401)
 
-    #  test recovery reset passwords
-
-
-
     def test_password_recovery(self):
         user = add_user('justatest3', 'test@test.com3', 'password')
 
@@ -338,11 +335,10 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.status_code, 404)
             self.assertIn(
                 'Login/email does not exist, please write a valid login/email', data['message'])
             self.assertIn('error', data['status'])
-
 
     def test_passwords_token_hash_are_random(self):
         add_user('justatest1', 'test@test.com1', 'password')
@@ -361,7 +357,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 200)
 
         user = User.query.filter_by(email='test@test.com1').first()
-        user_pw_hash1 = user.pw_hash
+        user_token_hash1 = user.token_hash
         add_user('justatest2', 'test@test.com2', 'password')
 
         with self.client:
@@ -377,24 +373,23 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertTrue(data['message'] == 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
 
-        # fetch the user data
-
         user2 = User.query.filter_by(email='test@test.com2').first()
 
-        self.assertTrue(user_pw_hash1 != user2.pw_hash and user_pw_hash1 is not None
-                        and user_pw_hash1 != "")
+        self.assertTrue(user_token_hash1 != user2.token_hash and user_token_hash1 is not None
+                        and user_token_hash1 != "")
 
     def test_password_reset(self):
         user = add_user('justatest3', 'test@test.com3', 'password')
         token = user.encode_password_token(user.id).decode()
 
-        user = set_user_token_pw_hash(user, token)
+        user = set_user_token_hash(user, token)
         user_password = user.password
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password/' + token,
+                '/v1/auth/password/',
                 data=json.dumps(dict(
+                    token=token,
                     password='password2'
                 )),
                 content_type='application/json'

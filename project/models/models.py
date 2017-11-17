@@ -106,9 +106,9 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    pw_hash = db.Column(db.String(255), nullable=True)
+    token_hash = db.Column(db.String(255), nullable=True)
 
-    def __init__(self, username, email, password, created_at=datetime.utcnow(), cell_phone_number=None, roles=UserRole.USER):
+    def __init__(self, username, email, password, cell_phone_number=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
         self.email = email
         self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
@@ -162,21 +162,18 @@ class User(db.Model):
 
     def encode_password_token(self, user_id):
         """Generates the auth token"""
-        try:
-            payload = {
-                'exp': datetime.utcnow() + timedelta(
-                    days=current_app.config['TOKEN_PASSWORD_EXPIRATION_DAYS'],
-                    seconds=current_app.config['TOKEN_PASSWORD_EXPIRATION_SECONDS']),
-                'iat': datetime.utcnow(),
-                'sub': user_id
-            }
-            return jwt.encode(
-                payload,
-                current_app.config.get('SECRET_KEY'),
-                algorithm='HS256'
-            )
-        except Exception as e:
-            return e
+        payload = {
+            'exp': datetime.utcnow() + timedelta(
+                days=current_app.config['TOKEN_PASSWORD_EXPIRATION_DAYS'],
+                seconds=current_app.config['TOKEN_PASSWORD_EXPIRATION_SECONDS']),
+            'iat': datetime.utcnow(),
+            'sub': user_id
+        }
+        return jwt.encode(
+            payload,
+            current_app.config.get('SECRET_KEY'),
+            algorithm='HS256'
+        )
 
     @staticmethod
     def decode_password_token(pass_token):

@@ -84,8 +84,8 @@ def create_app():
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     global celery
     celery = __make_celery(app)
-    # global twilio_client
-    # twilio_client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
+    global twilio_client
+    twilio_client = Client(app.config['TWILIO_ACCOUNT_SID'], app.config['TWILIO_AUTH_TOKEN'])
     return app
 
 app = create_app()

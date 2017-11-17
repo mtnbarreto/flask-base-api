@@ -11,11 +11,10 @@ from sqlalchemy import exc
 from sqlalchemy import or_
 
 from project import bcrypt
-from project.models.models import User, Device, UserRole
 from project import db
 from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
-
+from project.models.models import User, Device, UserRole
 from project.utils.mails import password_recovery_user
 
 auth_blueprint = Blueprint('auth', __name__)
@@ -154,13 +153,13 @@ def password_recovery():
 
     try:
         # fetch the user data
-        user = User.query.filter_by(email=email).first()
+        user = User.first_by(email=email)
         if user:
             token = user.encode_password_token(user.id)
-            user.pw_hash = bcrypt.generate_password_hash(token,
+            user.token_hash = bcrypt.generate_password_hash(token,
                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
 
-            db.session.commit()  # commit pw_hash
+            db.session.commit()  # commit token_hash
             password_recovery_user(user, token.decode())  # send recovery email
 
             response_object = {
@@ -174,30 +173,28 @@ def password_recovery():
                 'status': 'error',
                 'message': 'Login/email does not exist, please write a valid login/email'
             }
-            return jsonify(response_object), 400
+            return jsonify(response_object), 404
+
     except Exception as e:
-        print(e)
-        response_object = {
-            'status': 'error',
-            'message': 'Try again.'
-        }
-        return jsonify(response_object), 500
+        raise exceptions.ServerErrorException()
 
 
-@auth_blueprint.route('/auth/password/<token>', methods=['POST'])
-def password_reset(token):
+@auth_blueprint.route('/auth/password/', methods=['POST'])
+def password_reset():
     ''' reset user password (assumes login=email)'''
     post_data = request.get_json()
     if not post_data:
         raise exceptions.InvalidPayload()
 
+    token = post_data.get('token')
     pw_new = post_data.get('password')
+
 
     try:
         # fetch the user data
         user_id = User.decode_password_token(token)
         user = User.query.filter_by(id=user_id).first()
-        if user and bcrypt.check_password_hash(user.pw_hash, token):
+        if user and bcrypt.check_password_hash(user.token_hash, token):
             user.password = bcrypt.generate_password_hash(pw_new,
                                                           current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
             db.session.commit()  # commit new password
@@ -216,9 +213,4 @@ def password_reset(token):
             return jsonify(response_object), 404
 
     except Exception as e:
-        print(e)
-        response_object = {
-            'status': 'error',
-            'message': 'Try again.'
-        }
-        return jsonify(response_object), 500
+        raise exceptions.ServerErrorException()

@@ -66,10 +66,10 @@ from project.utils.mails import send_email
 def send_test_email():
     """Send test email with envoronment configuration."""
     send_email("Welcome to Flask Base Api! Martin",
-               sender="marcerossi21@gmail.com",
-               recipients=["marcerossi21@gmail.com"],
-               text_body="Hello",
-               html_body="<body><h4>Hello</h4></body>")
+               sender = "mtn.barreto@gmail.com",
+               recipients = ["mtn.barreto@gmail.com"],
+               text_body = "Hello",
+               html_body = "<body><h4>Hello</h4></body>")
 
 
 from project.utils.twilio import send_account_verification_code

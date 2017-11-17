@@ -19,7 +19,7 @@ def add_device(device_id, device_type, active=True, pn_token=None, user=None, cr
     db.session.commit()
     return device
 
-def set_user_token_pw_hash(user, token):
-    user.pw_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+def set_user_token_hash(user, token):
+    user.token_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
     db.session.commit()
     return user

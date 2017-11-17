@@ -39,3 +39,8 @@ class NotFoundException(APIException):
 
     def __init__(self, message='Not Found.', payload=None):
         super().__init__(message=message, status_code=404, payload=payload)
+
+class ServerErrorException(APIException):
+
+    def __init__(self, message='Something went wrong.', payload=None):
+        super().__init__(message=message, status_code=500, payload=payload)

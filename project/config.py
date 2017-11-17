@@ -22,9 +22,9 @@ class BaseConfig:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
-    MAIL_USERNAME = 'AKIAJALUHR6RKBCN42IQ'  # IAM: ses-smtp-user.20171116-024416
-    MAIL_PASSWORD = 'AkeprB08j1bfQaiePz0vw+PfHrJJmxLjGANrZRJWEMIl'
-    MAIL_SENDER = 'marcerossi21@gmail.com'  # custom configuration
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')  # IAM: ses-smtp-user.20171116-024416
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_SENDER = os.environ.get('MAIL_SENDER')  # custom configuration
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_FROM_NUMBER = "+15102963250"
