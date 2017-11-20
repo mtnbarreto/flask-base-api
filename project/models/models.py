@@ -92,6 +92,7 @@ class Device(db.Model):
         """Get first db device that match to device_id"""
         return Device.query.filter_by(**kwargs).first()
 
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -105,9 +106,9 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    token_hash = db.Column(db.String(255), nullable=True)
 
-
-    def __init__(self, username, email, password, created_at=datetime.utcnow(), cell_phone_number=None, roles=UserRole.USER):
+    def __init__(self, username, email, password, cell_phone_number=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
         self.email = email
         self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
@@ -157,3 +158,30 @@ class User(db.Model):
     def get(id):
         """Get db entity that match the id"""
         return User.query.get(id)
+
+
+    def encode_password_token(self, user_id):
+        """Generates the auth token"""
+        payload = {
+            'exp': datetime.utcnow() + timedelta(
+                days=current_app.config['TOKEN_PASSWORD_EXPIRATION_DAYS'],
+                seconds=current_app.config['TOKEN_PASSWORD_EXPIRATION_SECONDS']),
+            'iat': datetime.utcnow(),
+            'sub': user_id
+        }
+        return jwt.encode(
+            payload,
+            current_app.config.get('SECRET_KEY'),
+            algorithm='HS256'
+        )
+
+    @staticmethod
+    def decode_password_token(pass_token):
+        """Decodes the auth token - :param auth_token: - :return: integer|string"""
+        try:
+            payload = jwt.decode(pass_token, current_app.config.get('SECRET_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Recovery expired. Please try again.'
+        except jwt.InvalidTokenError:
+            return 'This recovery seems to be for another user. Please try in again.'
