@@ -5,8 +5,7 @@ import uuid
 from project import db
 from project.models.models import User
 from tests.base import BaseTestCase
-from tests.utils import add_user
-from tests.utils import set_user_token_hash
+from tests.utils import add_user, set_user_token_hash
 
 class TestAuthBlueprint(BaseTestCase):
 

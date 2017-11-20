@@ -16,7 +16,6 @@ class BaseConfig:
     TOKEN_EXPIRATION_SECONDS = 0
     TOKEN_PASSWORD_EXPIRATION_DAYS = 1
     TOKEN_PASSWORD_EXPIRATION_SECONDS = 0
-    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     #CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = os.environ.get('MAIL_PORT')
@@ -34,7 +33,9 @@ class DevelopmentConfig(BaseConfig):
     """Development configuration"""
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     BCRYPT_LOG_ROUNDS = 4
+    MAIL_SUPPRESS_SEND = True
 
 
 class TestingConfig(BaseConfig):
@@ -42,13 +43,16 @@ class TestingConfig(BaseConfig):
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_TEST_URL')
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_TEST_URL')
     BCRYPT_LOG_ROUNDS = 4
     TOKEN_EXPIRATION_DAYS = 0
     TOKEN_EXPIRATION_SECONDS = 3
+    MAIL_SUPPRESS_SEND = True
 
 
 class ProductionConfig(BaseConfig):
     """Production configuration"""
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     SENTRY_DSN = 'Sentry_DNS'

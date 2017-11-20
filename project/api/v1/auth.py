@@ -20,7 +20,6 @@ def register_user():
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
-    # current_app.logger.info(post_data.__class__.__name__)
     try:
         # check for existing user
         user = User.first(or_(User.username == username, User.email == email))

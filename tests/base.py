@@ -1,5 +1,7 @@
 # project/tests/base.py
 
+import os
+os.environ["APP_SETTINGS"] = "project.config.TestingConfig"
 from flask_testing import TestCase
 from project import app, db
 
