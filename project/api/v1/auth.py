@@ -1,17 +1,9 @@
 # project/api/auth.py
 
-from flask import Blueprint
-from flask import abort
-from flask import jsonify
-from flask import redirect
-from flask import request
-from flask import url_for
-from flask import current_app
-from sqlalchemy import exc
-from sqlalchemy import or_
+from flask import Blueprint, jsonify, request, abort, redirect, url_for, current_app
+from sqlalchemy import exc, or_
 
-from project import bcrypt
-from project import db
+from project import bcrypt, db
 from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
@@ -28,8 +20,7 @@ def register_user():
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
-    device_id = post_data.get('device').get('device_id')
-    device_type =  post_data.get('device').get('device_type')
+    # current_app.logger.info(post_data.__class__.__name__)
     try:
         # check for existing user
         user = User.first(or_(User.username == username, User.email == email))
@@ -41,8 +32,12 @@ def register_user():
                 password=password
             )
             db.session.add(new_user)
-            Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
             db.session.commit()
+            if 'device' in post_data:
+                device_id = post_data.get('device').get('device_id')
+                device_type =  post_data.get('device').get('device_type')
+                Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
+                db.session.commit()
             # generate auth token
             auth_token = new_user.encode_auth_token(new_user.id)
             response_object = {
@@ -50,14 +45,23 @@ def register_user():
                 'message': 'Successfully registered.',
                 'auth_token': auth_token.decode()
             }
+            # send registration email
+            from project.utils.mails import send_registration_email
+            send_registration_email(new_user)
+
+            #task = send_async_registration_email.apply_async(countdown=3)
+
+            # mails.send_registration_email(new_user)
             return jsonify(response_object), 201
         else:
             # user already registered
             # disable device
-            device = Device.first_by(device_id=device_id)
-            if device:
-                device.active = False
-                db.session.commit()
+            if 'device' in post_data:
+                device_id = post_data.get('device').get('device_id')
+                device = Device.first_by(device_id=device_id)
+                if device:
+                    device.active = False
+                    db.session.commit()
 
             raise exceptions.BusinessException(message='Sorry. That user already exists.')
     # handler errors
@@ -114,10 +118,11 @@ def login_user():
 @privileges(roles = UserRole.USER | UserRole.USER_ADMIN | UserRole.BACKEND_ADMIN)
 def logout_user(user_id):
     device_id = request.headers.get('X-Device-Id')
-    device = Device.first_by(device_id=device_id)
-    if device:
-        device.active = False
-        db.session.commit()
+    if device_id:
+        device = Device.first_by(device_id=device_id)
+        if device:
+            device.active = False
+            db.session.commit()
     response_object = {
         'status': 'success',
         'message': 'Successfully logged out.'

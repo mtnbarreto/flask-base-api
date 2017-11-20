@@ -33,3 +33,12 @@ def password_recovery_user(user, token):
                #+ user.username + '</strong></h4><h1> Click the following link to create your new password </h1><a href="' + href + '">click here</a>  </div></body>')
                )
 
+from flask import render_template
+from project.tasks.mail_tasks import send_async_registration_email
+
+
+def send_registration_email(user):
+    send_async_registration_email.delay(subject="Welcome to Flask Base Api! %s" % user.username,
+                     recipients = [user.email],
+                     text_body = render_template("auth/welcome_new_user.txt", user=user),
+                     html_body = render_template("auth/welcome_new_user.html", user=user))
