@@ -7,7 +7,7 @@ from project import bcrypt, db
 from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
-from project.utils.mails import password_recovery_user
+
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -49,9 +49,6 @@ def register_user():
             from project.utils.mails import send_registration_email
             send_registration_email(new_user)
 
-            #task = send_async_registration_email.apply_async(countdown=3)
-
-            # mails.send_registration_email(new_user)
             return jsonify(response_object), 201
         else:
             # user already registered
@@ -165,6 +162,8 @@ def password_recovery():
                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
 
             db.session.commit()  # commit token_hash
+
+            from project.utils.mails import password_recovery_user
             password_recovery_user(user, token.decode())  # send recovery email
 
             response_object = {

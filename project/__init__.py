@@ -71,11 +71,12 @@ def create_app():
     app.register_error_handler(exceptions.UnautorizedException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)
     return app
 
 def make_celery(app):
     app = app or create_app()
-    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks'])
+    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks'])  #backend=conf['CELERY_RESULT_BACKEND']
     # backend=app.config['CELERY_RESULT_BACKEND'] app.import_name
     celery.conf.update(app.config)
     TaskBase = celery.Task
@@ -86,10 +87,6 @@ def make_celery(app):
                 return TaskBase.__call__(self, *args, **kwargs)
     celery.Task = ContextTask
     return celery
-
-#celery = Celery(__name__, broker=conf['CELERY_BROKER_URL']) #backend=conf['CELERY_RESULT_BACKEND']
-
-
 
 app = create_app()
 celery = make_celery(app)
