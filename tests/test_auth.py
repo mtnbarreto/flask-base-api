@@ -5,8 +5,7 @@ import uuid
 from project import db
 from project.models.models import User
 from tests.base import BaseTestCase
-from tests.utils import add_user
-from tests.utils import set_user_token_hash
+from tests.utils import add_user, set_user_token_hash
 
 class TestAuthBlueprint(BaseTestCase):
 
@@ -375,8 +374,9 @@ class TestAuthBlueprint(BaseTestCase):
 
         user2 = User.query.filter_by(email='test@test.com2').first()
 
-        self.assertTrue(user_token_hash1 != user2.token_hash and user_token_hash1 is not None
-                        and user_token_hash1 != "")
+        self.assertTrue(user_token_hash1 != user2.token_hash)
+        self.assertTrue(user_token_hash1 is not None)
+        self.assertTrue(user_token_hash1 != "")
 
     def test_password_reset(self):
         user = add_user('justatest3', 'test@test.com3', 'password')

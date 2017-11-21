@@ -104,9 +104,10 @@ class User(db.Model):
     active = db.Column(db.Boolean, default=True, nullable=False)
     roles = db.Column(db.Integer, default=UserRole.USER.value, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    token_hash = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    token_hash = db.Column(db.String(255), nullable=True)
+
 
     def __init__(self, username, email, password, cell_phone_number=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
