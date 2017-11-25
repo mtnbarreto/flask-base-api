@@ -1,18 +1,11 @@
 Flask==0.12.2
-flask-script==2.0.6
 Flask-SQLAlchemy==2.3.1
-psycopg2==2.7.3.1
 Flask-Testing==0.6.2
 coverage==4.4.1
 gunicorn==19.7.1
-coverage==4.4.1
-Flask==0.12.2
 Flask-Migrate==2.1.1
 Flask-Script==2.0.6
-Flask-SQLAlchemy==2.3.1
-Flask-Testing==0.6.2
 Flask-Mail==0.9.1
-gunicorn==19.7.1
 alembic==0.9.5
 click==6.7
 SQLAlchemy==1.1.14
@@ -34,3 +27,4 @@ flask-cors==3.0.3
 raven==6.3.0
 apns2==0.3.0
 facepy==1.0.9
+pyfcm==1.4.3

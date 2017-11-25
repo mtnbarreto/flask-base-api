@@ -44,9 +44,14 @@ def register_user():
                 'message': 'Successfully registered.',
                 'auth_token': auth_token.decode()
             }
+
+
+
+            
             # send registration email
-            from project.utils.mails import send_registration_email
-            send_registration_email(new_user)
+            if not current_app.testing:
+                from project.utils.mails import send_registration_email
+                send_registration_email(new_user)
 
             return jsonify(response_object), 201
         else:
@@ -74,6 +79,9 @@ def login_user():
         raise exceptions.InvalidPayload()
     email = post_data.get('email')
     password = post_data.get('password')
+    device = post_data.get('device')
+    if not device:
+        raise exceptions.InvalidPayload()
     device_id = post_data.get('device').get('device_id')
     device_type = post_data.get('device').get('device_type')
     if not password:
