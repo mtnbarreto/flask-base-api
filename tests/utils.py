@@ -3,7 +3,7 @@
 import datetime
 
 from project import db, app
-from project.models.models import User, Device, UserRole
+from project.models.models import User, Device, UserRole, Group, UserGroupAssociation
 from project import bcrypt
 
 
@@ -18,6 +18,18 @@ def add_device(device_id, device_type, active=True, pn_token=None, user=None, cr
     db.session.add(device)
     db.session.commit()
     return device
+
+def add_group(name):
+    group = Group(name=name)
+    db.session.add(group)
+    db.session.commit()
+    return group
+
+def add_user_group_association(user, group):
+    user_group_association = UserGroupAssociation(user=user, group=group)
+    db.session.add(user_group_association)
+    db.session.commit()
+    return user_group_association
 
 def set_user_token_hash(user, token):
     user.token_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()

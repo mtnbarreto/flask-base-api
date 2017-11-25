@@ -18,6 +18,8 @@ class TestDeviceModel(BaseTestCase):
         self.assertFalse(device.user)
         self.assertEqual(device.device_type, 'apple')
 
+
+
     def test_add_user_duplicate_device_id(self):
         add_device(device_id="device_id", device_type="apple")
         duplicate_device = Device(device_id="device_id", device_type="android")

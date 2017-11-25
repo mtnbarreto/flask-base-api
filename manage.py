@@ -7,7 +7,7 @@ from flask_script import Manager
 from flask_migrate import MigrateCommand
 
 from project import app, db, celery
-from project.models.models import User
+from project.models.models import User, EventDescriptor, Group, UserGroupAssociation
 
 COV = coverage.coverage(
     branch=True,
@@ -40,8 +40,18 @@ def recreate_db():
 @manager.command
 def seed_db():
     """Seeds the database."""
-    db.session.add(User(username='martin', email="mtn.barreto@gmail.com", password="password", cell_phone_number="+59898983510"))
-    db.session.add(User(username='barreto', email="barretomartin1984@gmail.com", password="password"))
+    eventDesc = EventDescriptor(id=1, name="Event Name", description="Event Description")
+    db.session.add(eventDesc)
+    group = Group(name="Group Name")
+    db.session.add(group)
+    user1 = User(username='martin', email="mtn.barreto@gmail.com", password="password", cell_phone_number="+59898983510")
+    user2 = User(username='barreto', email="barretomartin1984@gmail.com", password="password")
+    db.session.add(user1)
+    db.session.add(user2)
+    user_group_association1 = UserGroupAssociation(user=user1, group=group)
+    db.session.add(user_group_association1)
+    user_group_association2 = UserGroupAssociation(user=user2, group=group)
+    db.session.add(user_group_association2)
     db.session.commit()
 
 @manager.command

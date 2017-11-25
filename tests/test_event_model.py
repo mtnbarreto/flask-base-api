@@ -9,7 +9,7 @@ from tests.base import BaseTestCase
 class TestEventModel(BaseTestCase):
 
     def test_add_event(self):
-        event_descriptor = EventDescriptor(name="event_name", description="event_description")
+        event_descriptor = EventDescriptor(id=1, name="event_name", description="event_description")
         db.session.add(event_descriptor)
         db.session.commit()
 

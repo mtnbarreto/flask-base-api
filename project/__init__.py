@@ -12,6 +12,7 @@ from twilio.rest import Client
 from celery import Celery
 from flask_cors import CORS
 from raven.contrib.flask import Sentry
+from pyfcm import FCMNotification
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
@@ -22,10 +23,10 @@ db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 mail = Mail()
+
 sentry = None
-
 twilio_client = Client(conf['TWILIO_ACCOUNT_SID'], conf['TWILIO_AUTH_TOKEN'])
-
+push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 
 def create_app():
     # instantiate the app

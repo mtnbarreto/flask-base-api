@@ -7,16 +7,18 @@ from datetime import datetime, timedelta
 from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
+from sqlalchemy.ext.associationproxy import association_proxy
 
 class EventDescriptor(db.Model):
     __tablename__ = "event_descriptors"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     description = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, name, description):
+    def __init__(self, id, name, description):
+        self.id = id
         self.name = name
         self.description = description
 
@@ -38,6 +40,9 @@ class Event(db.Model):
     entity_3_id =  db.Column(db.Integer)
     entity_3_description = db.Column(db.String(128))
     expiration_date =  db.Column(db.DateTime)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
+    group = db.relationship('Group', backref=db.backref('events', lazy='joined'))
+    is_processed = db.Column(db.Boolean, default=False, nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     creator = db.relationship('User', backref=db.backref('events', lazy='joined'))
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -93,6 +98,32 @@ class Device(db.Model):
         return Device.query.filter_by(**kwargs).first()
 
 
+class UserGroupAssociation(db.Model):
+    __tablename__ = "user_group_associations"
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+    user = db.relationship("User", back_populates="associated_groups")
+    group = db.relationship("Group", back_populates="associated_users")
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __init__(self, user, group):
+        self.user = user
+        self.group = group
+
+
+class Group(db.Model):
+    __tablename__ = "groups"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(128))
+    associated_users = db.relationship("UserGroupAssociation", back_populates="group")
+    users = association_proxy('associated_users', 'user')
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __init__(self, name):
+        self.name = name
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -107,6 +138,8 @@ class User(db.Model):
     token_hash = db.Column(db.String(255), nullable=True)
     fb_id = db.Column(db.String(64), unique=True, nullable=True)  # null if never logged in facebook
     fb_access_token = db.Column(db.String, nullable=True)
+    associated_groups = db.relationship("UserGroupAssociation", back_populates="user")
+    groups = association_proxy('associated_groups', 'group')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

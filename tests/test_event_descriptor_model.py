@@ -9,7 +9,7 @@ from tests.base import BaseTestCase
 class TestEventDescriptorModel(BaseTestCase):
 
     def test_add_event_descriptor(self):
-        event_descriptor = EventDescriptor(name="event_name", description="event_description")
+        event_descriptor = EventDescriptor(id = 1, name="event_name", description="event_description")
         db.session.add(event_descriptor)
         db.session.commit()
 
@@ -18,7 +18,7 @@ class TestEventDescriptorModel(BaseTestCase):
         self.assertEqual(event_descriptor.description, 'event_description')
 
     def test_event_descriptor_relations(self):
-        event_descriptor = EventDescriptor(name="event_name", description="event_description")
+        event_descriptor = EventDescriptor(id = 1, name="event_name", description="event_description")
         db.session.add(event_descriptor)
         db.session.commit()
 

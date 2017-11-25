@@ -28,6 +28,7 @@ class BaseConfig:
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_FROM_NUMBER = "+15102963250"
     SENTRY_DSN = 'Sentry_DNS'
+    FCM_SERVER_KEY = os.environ.get('FCM_SERVER_KEY')
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration"""
@@ -44,6 +45,7 @@ class TestingConfig(BaseConfig):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_TEST_URL')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_TEST_URL')
+    CELERY_TASK_ALWAYS_EAGER = True
     BCRYPT_LOG_ROUNDS = 4
     TOKEN_EXPIRATION_DAYS = 0
     TOKEN_EXPIRATION_SECONDS = 3
