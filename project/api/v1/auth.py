@@ -7,7 +7,7 @@ from project import bcrypt, db
 from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
-
+from facepy import GraphAPI
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -75,7 +75,9 @@ def login_user():
     email = post_data.get('email')
     password = post_data.get('password')
     device_id = post_data.get('device').get('device_id')
-    device_type =  post_data.get('device').get('device_type')
+    device_type = post_data.get('device').get('device_type')
+    if not password:
+        raise exceptions.InvalidPayload()
     try:
         # fetch the user data
         user = User.first_by(email=email)
@@ -216,4 +218,64 @@ def password_reset():
             return jsonify(response_object), 404
 
     except Exception as e:
+        raise exceptions.ServerErrorException()
+
+
+@auth_blueprint.route('/auth/facebook/login', methods=['POST'])
+def facebook_login():
+    ''' logs in user using fb_access_token returning the corresponding JWT
+        if user does not exist registers/creates a new one'''
+
+    post_data = request.get_json()
+    if not post_data:
+        raise exceptions.InvalidPayload()
+
+    fb_access_token = post_data.get('fb_access_token')
+
+    try:
+        graph = GraphAPI(fb_access_token)
+        profile = graph.get("me?fields=id,name,email,link")
+    except Exception as e:
+        raise exceptions.UnautorizedException
+
+    fb_user = User.first(User.fb_id == profile['id'])
+
+    try:
+        if not fb_user:
+            # Not an existing user so get info, register and login
+            user = User.first(User.email == profile['email'])
+            code = 200
+            if user:
+                user.fb_access_token = fb_access_token
+                user.fb_id = profile['id']
+            else:
+                # Create the user and insert it into the database
+                user = User(username=profile['name'],
+                            email=profile['email'],
+                            fb_id=profile['id'],
+                            fb_access_token=fb_access_token)
+                db.session.add(user)
+                code = 201
+
+            db.session.commit()
+            # generate auth token
+            auth_token = user.encode_auth_token(user.id)
+            response_object = {
+                'status': 'success',
+                'message': 'Successfully facebook registered.',
+                'auth_token': auth_token.decode()
+            }
+            return jsonify(response_object), code
+        else:
+            auth_token = fb_user.encode_auth_token(fb_user.id)
+            fb_user.fb_access_token = fb_access_token
+            db.session.commit()
+            response_object = {
+                'status': 'success',
+                'message': 'Successfully facebook login.',
+                'auth_token': auth_token.decode()
+            }
+            return jsonify(response_object), 200
+    except Exception as e:
+        db.session.rollback()
         raise exceptions.ServerErrorException()

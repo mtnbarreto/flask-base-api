@@ -103,19 +103,24 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     roles = db.Column(db.Integer, default=UserRole.USER.value, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
     token_hash = db.Column(db.String(255), nullable=True)
+    fb_id = db.Column(db.String(64), unique=True, nullable=True)  # null if never logged in facebook
+    fb_access_token = db.Column(db.String, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
-    def __init__(self, username, email, password, cell_phone_number=None, roles=UserRole.USER, created_at=datetime.utcnow()):
+    def __init__(self, username, email, password=None, cell_phone_number=None, fb_id=None,
+                 fb_access_token=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
         self.email = email
-        self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        if password:
+            self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         self.created_at = created_at
         self.updated_at = created_at
         self.cell_phone_number = cell_phone_number
+        self.fb_id = fb_id
+        self.fb_access_token = fb_access_token
         self.roles = roles.value
 
     def encode_auth_token(self, user_id):

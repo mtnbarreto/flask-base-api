@@ -280,32 +280,3 @@ class TestUserService(BaseTestCase):
             self.assertIn('success', data['status'])
 
 
-    def test_add_user_invalid_json_keys_no_password(self):
-        """Ensure error is thrown if the JSON object does not have a password key."""
-        add_user('test', 'test@test.com', 'test', roles=UserRole.BACKEND_ADMIN)
-        with self.client:
-            resp_login = self.client.post(
-                '/v1/auth/login',
-                data=json.dumps(dict(
-                    email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
-                )),
-                content_type='application/json'
-            )
-            response = self.client.post(
-                '/v1/users',
-                data=json.dumps(dict(
-                    username='michael',
-                    email='michael@realpython.com')),
-                content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
-            )
-            data = json.loads(response.data.decode())
-            self.assertEqual(response.status_code, 400)
-            self.assertIn('Invalid payload.', data['message'])
-            self.assertIn('error', data['status'])
