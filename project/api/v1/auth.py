@@ -44,10 +44,6 @@ def register_user():
                 'message': 'Successfully registered.',
                 'auth_token': auth_token.decode()
             }
-
-
-
-            
             # send registration email
             if not current_app.testing:
                 from project.utils.mails import send_registration_email
@@ -82,8 +78,8 @@ def login_user():
     device = post_data.get('device')
     if not device:
         raise exceptions.InvalidPayload()
-    device_id = post_data.get('device').get('device_id')
-    device_type = post_data.get('device').get('device_type')
+    device_id = device.get('device_id')
+    device_type = device.get('device_type')
     if not password:
         raise exceptions.InvalidPayload()
     try:
@@ -153,7 +149,7 @@ def get_user_status(user_id):
     return jsonify(response_object), 200
 
 
-@auth_blueprint.route('/auth/password', methods=['POST'])
+@auth_blueprint.route('/auth/password_recovery', methods=['POST'])
 def password_recovery():
     ''' creates a password_recovery_hash and sends email to user (assumes login=email)'''
     post_data = request.get_json()
@@ -192,7 +188,7 @@ def password_recovery():
         raise exceptions.ServerErrorException()
 
 
-@auth_blueprint.route('/auth/password/', methods=['POST'])
+@auth_blueprint.route('/auth/password', methods=['POST'])
 def password_reset():
     ''' reset user password (assumes login=email)'''
     post_data = request.get_json()

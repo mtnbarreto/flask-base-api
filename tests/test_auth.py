@@ -312,7 +312,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password',
+                '/v1/auth/password_recovery',
                 data=json.dumps(dict(
                     email='test@test.com3'
                 )),
@@ -327,7 +327,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password',
+                '/v1/auth/password_recovery',
                 data=json.dumps(dict(
                     email='not_exists@test.com'
                 )),
@@ -344,7 +344,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password',
+                '/v1/auth/password_recovery',
                 data=json.dumps(dict(
                     email='test@test.com1'
                 )),
@@ -361,7 +361,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password',
+                '/v1/auth/password_recovery',
                 data=json.dumps(dict(
                     email='test@test.com2'
                 )),
@@ -387,7 +387,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         with self.client:
             response = self.client.post(
-                '/v1/auth/password/',
+                '/v1/auth/password',
                 data=json.dumps(dict(
                     token=token,
                     password='password2'
