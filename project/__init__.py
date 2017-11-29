@@ -13,6 +13,20 @@ from celery import Celery
 from flask_cors import CORS
 from raven.contrib.flask import Sentry
 from pyfcm import FCMNotification
+from flask.json import JSONEncoder
+
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        try:
+            if isinstance(obj, datetime.date):
+                return obj.isoformat()
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
@@ -31,7 +45,8 @@ push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 def create_app():
     # instantiate the app
     app = Flask(__name__, template_folder='./templates', static_folder='./static')
-
+    # set up custom encoder to handle date as ISO8601 format
+    app.json_encoder = CustomJSONEncoder
     # enable CORS
     CORS(app)
 

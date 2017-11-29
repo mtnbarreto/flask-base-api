@@ -17,6 +17,7 @@ class TestGroupModel(BaseTestCase):
         self.assertTrue(group.created_at)
         self.assertTrue(group.updated_at)
         self.assertEqual(len(group.associated_users), 0)
+        self.assertEqual(len(group.users), 0)
 
     def test_associated_users(self):
         user = add_user(username="test", email="test@test.com1", password="test")
