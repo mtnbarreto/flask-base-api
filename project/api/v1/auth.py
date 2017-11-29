@@ -7,8 +7,9 @@ from project import bcrypt, db
 from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
-from facepy import GraphAPI
 from project.utils.constants import Constants
+from facepy import GraphAPI
+
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -39,7 +40,8 @@ def register_user():
             if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
                 device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
                 device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
-                Device.create_or_update(device_id=device_id, device_type=device_type, user=user, commit=True)
+                Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
+                db.session.commit()
             # generate auth token
             auth_token = new_user.encode_auth_token()
             response_object = {
@@ -85,7 +87,8 @@ def login_user():
             if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
                 device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
                 device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
-                Device.create_or_update(device_id=device_id, device_type=device_type, user=user, commit=True)
+                Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
+                db.session.commit()
             auth_token = user.encode_auth_token()
             if auth_token:
                 response_object = {

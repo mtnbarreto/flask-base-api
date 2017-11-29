@@ -24,8 +24,8 @@ class TestDevicesBlueprint(BaseTestCase):
             )
             device_id = uuid.uuid4().hex
             pn_token = uuid.uuid4().hex
-            response = self.client.post(
-                '/v1/devices',
+            response = self.client.put(
+                f'/v1/devices/{device_id}',
                 data=json.dumps(dict(
                     device_id=device_id,
                     device_type='apple',
@@ -103,8 +103,8 @@ class TestDevicesBlueprint(BaseTestCase):
 
 
             pn_token = uuid.uuid4().hex
-            self.client.post(
-                '/v1/devices',
+            self.client.put(
+                f'/v1/devices/{device_id}',
                 data=json.dumps(dict(
                     device_id=device_id,
                     device_type='apple',
@@ -113,8 +113,8 @@ class TestDevicesBlueprint(BaseTestCase):
                 content_type='application/json',
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
-            response = self.client.post(
-                '/v1/devices',
+            response = self.client.put(
+                f'/v1/devices/{device_id}',
                 data=json.dumps(dict(
                     device_id=device_id,
                     device_type='apple',
@@ -159,12 +159,8 @@ class TestDevicesBlueprint(BaseTestCase):
             # valid token logout
             response = self.client.get(
                 '/v1/auth/logout',
-                headers={
-                    Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token'],
-                    Constants.HttpHeaders.DEVICE_ID: device_id
-                }
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'],
+                          Constants.HttpHeaders.DEVICE_ID: device_id }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'success')
