@@ -156,14 +156,14 @@ class User(db.Model):
         self.fb_access_token = fb_access_token
         self.roles = roles.value
 
-    def encode_auth_token(self, user_id):
+    def encode_auth_token(self):
         """Generates the auth token"""
         try:
             payload = {
                 'exp': datetime.utcnow() + timedelta(
                     days=current_app.config['TOKEN_EXPIRATION_DAYS'], seconds=current_app.config['TOKEN_EXPIRATION_SECONDS']),
                 'iat': datetime.utcnow(),
-                'sub': user_id
+                'sub': self.id
             }
             return jwt.encode(
                 payload,

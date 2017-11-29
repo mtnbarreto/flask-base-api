@@ -4,10 +4,12 @@ import uuid
 
 from project import db
 from project.models.models import User, UserRole
+from project.utils.constants import Constants
 from tests.base import BaseTestCase
 from tests.utils import add_device, add_user
 
-class TestAuthBlueprint(BaseTestCase):
+
+class TestDevicesBlueprint(BaseTestCase):
 
     def test_device_registration(self):
         with self.client:
@@ -16,8 +18,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -31,11 +32,7 @@ class TestAuthBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'success')
@@ -54,22 +51,21 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=device_id, device_type="apple")
+                    password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple" }
             )
-
             self.assertEqual(len(user1.devices), 1)
 
             self.client.post(
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test2@test.com',
-                    password='test',
-                    device=dict(device_id=device_id, device_type="apple")
+                    password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple" }
             )
 
             self.assertEqual(len(user1.devices), 0)
@@ -92,8 +88,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=device_id, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -101,8 +96,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test2@test.com',
-                    password='test',
-                    device=dict(device_id=device_id, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -117,11 +111,7 @@ class TestAuthBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             response = self.client.post(
                 '/v1/devices',
@@ -131,11 +121,7 @@ class TestAuthBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp2_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp2_login.data.decode())['auth_token'] }
             )
 
             data = json.loads(response.data.decode())
@@ -164,20 +150,20 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=device_id, device_type="apple")
+                    password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple" }
             )
             self.assertEqual(len(user.devices), 1)
             # valid token logout
             response = self.client.get(
                 '/v1/auth/logout',
                 headers={
-                    "Authorization": 'Bearer ' + json.loads(
+                    Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(
                         resp_login.data.decode()
                     )['auth_token'],
-                    "X-Device-Id": device_id
+                    Constants.HttpHeaders.DEVICE_ID: device_id
                 }
             )
             data = json.loads(response.data.decode())

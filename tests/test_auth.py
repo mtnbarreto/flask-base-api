@@ -4,6 +4,7 @@ import uuid
 
 from project import db
 from project.models.models import User
+from project.utils.constants import Constants
 from tests.base import BaseTestCase
 from tests.utils import add_user, set_user_token_hash
 
@@ -16,8 +17,7 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     username='justatest',
                     email='test@test.com',
-                    password='123456',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='123456'
                 )),
                 content_type='application/json'
             )
@@ -36,8 +36,7 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     username='michael',
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json',
             )
@@ -55,8 +54,7 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     username='test',
                     email='test@test.com2',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json',
             )
@@ -83,8 +81,7 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict(email='test@test.com',
-                                  password='test',
-                                    device=dict(device_id=uuid.uuid4().hex))),
+                                  password='test')),
                 content_type='application/json',
             )
             data = json.loads(response.data.decode())
@@ -97,7 +94,8 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict(
-                    username='justatest', password='test', device=dict(device_id=uuid.uuid4().hex))),
+                                    username='justatest',
+                                    password='test')),
                 content_type='application/json',
             )
             data = json.loads(response.data.decode())
@@ -110,14 +108,15 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict(
-                    username='justatest', email='test@test.com', device=dict(device_id=uuid.uuid4().hex))),
+                    username='justatest',
+                    email='test@test.com'
+                )),
                 content_type='application/json',
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
             self.assertIn('Invalid payload.', data['message'])
             self.assertIn('error', data['status'])
-
 
 
     # Login tests
@@ -129,8 +128,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -147,8 +145,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -168,19 +165,14 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
             # valid token logout
             response = self.client.get(
                 '/v1/auth/logout',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'success')
@@ -195,8 +187,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -204,11 +195,7 @@ class TestAuthBlueprint(BaseTestCase):
             time.sleep(4)
             response = self.client.get(
                 '/v1/auth/logout',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')
@@ -220,7 +207,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             response = self.client.get(
                 '/v1/auth/logout',
-                headers=dict(Authorization='Bearer invalid'))
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')
             self.assertTrue(
@@ -236,18 +223,13 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
             response = self.client.get(
                 '/v1/auth/status',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'success')
@@ -263,7 +245,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             response = self.client.get(
                 '/v1/auth/status',
-                headers=dict(Authorization='Bearer invalid'))
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')
             self.assertTrue(
@@ -282,8 +264,7 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -295,11 +276,7 @@ class TestAuthBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertTrue(data['status'] == 'error')

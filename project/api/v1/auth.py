@@ -8,6 +8,7 @@ from project.api.common import exceptions
 from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
 from facepy import GraphAPI
+from project.utils.constants import Constants
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -20,6 +21,8 @@ def register_user():
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
+    if not password:
+        raise exceptions.InvalidPayload()
     try:
         # check for existing user
         user = User.first(or_(User.username == username, User.email == email))
@@ -32,13 +35,13 @@ def register_user():
             )
             db.session.add(new_user)
             db.session.commit()
-            if 'device' in post_data:
-                device_id = post_data.get('device').get('device_id')
-                device_type =  post_data.get('device').get('device_type')
-                Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
-                db.session.commit()
+            # save the device
+            if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
+                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+                device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+                Device.create_or_update(device_id=device_id, device_type=device_type, user=user, commit=True)
             # generate auth token
-            auth_token = new_user.encode_auth_token(new_user.id)
+            auth_token = new_user.encode_auth_token()
             response_object = {
                 'status': 'success',
                 'message': 'Successfully registered.',
@@ -51,17 +54,14 @@ def register_user():
 
             return jsonify(response_object), 201
         else:
-            # user already registered
-            # disable device
-            if 'device' in post_data:
-                device_id = post_data.get('device').get('device_id')
+            # user already registered, set False to device.active
+            if Constants.HttpHeaders.DEVICE_ID in request.headers:
+                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
                 device = Device.first_by(device_id=device_id)
                 if device:
                     device.active = False
                     db.session.commit()
-
             raise exceptions.BusinessException(message='Sorry. That user already exists.')
-    # handler errors
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
         raise exceptions.InvalidPayload()
@@ -75,19 +75,18 @@ def login_user():
         raise exceptions.InvalidPayload()
     email = post_data.get('email')
     password = post_data.get('password')
-    device = post_data.get('device')
-    if not device:
-        raise exceptions.InvalidPayload()
-    device_id = device.get('device_id')
-    device_type = device.get('device_type')
     if not password:
         raise exceptions.InvalidPayload()
     try:
         # fetch the user data
         user = User.first_by(email=email)
         if user and bcrypt.check_password_hash(user.password, password):
-            Device.create_or_update(device_id=device_id, device_type=device_type, user=user, commit=True)
-            auth_token = user.encode_auth_token(user.id)
+            # register device if needed
+            if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
+                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+                device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+                Device.create_or_update(device_id=device_id, device_type=device_type, user=user, commit=True)
+            auth_token = user.encode_auth_token()
             if auth_token:
                 response_object = {
                     'status': 'success',
@@ -97,17 +96,18 @@ def login_user():
                 return jsonify(response_object), 200
         else:
             # user is not logged in, set False to device.active
-            device = Device.first_by(device_id=device_id)
-            if device:
-                device.active = False
-                db.session.commit()
+            if Constants.HttpHeaders.DEVICE_ID in request.headers:
+                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+                device = Device.first_by(device_id=device_id)
+                if device:
+                    device.active = False
+                    db.session.commit()
             response_object = {
                 'status': 'error',
                 'message': 'User does not exist.'
             }
             return jsonify(response_object), 404
     except Exception as e:
-        print(e)
         response_object = {
             'status': 'error',
             'message': 'Try again.'
@@ -119,8 +119,8 @@ def login_user():
 @authenticate
 @privileges(roles = UserRole.USER | UserRole.USER_ADMIN | UserRole.BACKEND_ADMIN)
 def logout_user(user_id):
-    device_id = request.headers.get('X-Device-Id')
-    if device_id:
+    if Constants.HttpHeaders.DEVICE_ID in request.headers:
+        device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
         device = Device.first_by(device_id=device_id)
         if device:
             device.active = False
@@ -263,7 +263,7 @@ def facebook_login():
 
             db.session.commit()
             # generate auth token
-            auth_token = user.encode_auth_token(user.id)
+            auth_token = user.encode_auth_token()
             response_object = {
                 'status': 'success',
                 'message': 'Successfully facebook registered.',
@@ -271,7 +271,7 @@ def facebook_login():
             }
             return jsonify(response_object), code
         else:
-            auth_token = fb_user.encode_auth_token(fb_user.id)
+            auth_token = fb_user.encode_auth_token()
             fb_user.fb_access_token = fb_access_token
             db.session.commit()
             response_object = {
