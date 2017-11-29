@@ -5,12 +5,13 @@ import datetime
 import uuid
 
 from project import db
+from project.utils.constants import Constants
 from tests.base import BaseTestCase
 from project.models.models import User, UserRole
 from tests.utils import add_user
 
 
-class TestUserService(BaseTestCase):
+class TestUsersBlueprint(BaseTestCase):
     """Tests for the Users Service."""
 
     def test_users(self):
@@ -30,8 +31,7 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -43,11 +43,7 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 201)
@@ -64,8 +60,7 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -73,11 +68,7 @@ class TestUserService(BaseTestCase):
                 '/v1/users',
                 data=json.dumps(dict()),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -92,8 +83,7 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -101,11 +91,7 @@ class TestUserService(BaseTestCase):
                 '/v1/users',
                 data=json.dumps(dict(email='michael@realpython.com', password='password')),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -120,8 +106,7 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
@@ -133,11 +118,7 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             response = self.client.post(
                 '/v1/users',
@@ -147,11 +128,7 @@ class TestUserService(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers=dict(
-                    Authorization='Bearer ' + json.loads(
-                        resp_login.data.decode()
-                    )['auth_token']
-                )
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -170,17 +147,11 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
-            response = self.client.get(f'/v1/users/{user.id}',
-                                            headers=dict(
-                                                Authorization='Bearer ' + json.loads(
-                                                    resp_login.data.decode()
-                                                )['auth_token']
-                                            ))
+            response = self.client.get(f'/v1/users/{user.id}', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertTrue('created_at' in data['data'])
@@ -197,17 +168,11 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
-            response = self.client.get('/v1/users/blah',
-                                            headers=dict(
-                                                Authorization='Bearer ' + json.loads(
-                                                    resp_login.data.decode()
-                                                )['auth_token']
-                                            ))
+            response = self.client.get('/v1/users/blah', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist.', data['message'])
@@ -221,17 +186,11 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
-            response = self.client.get('/v1/users/999',
-                                                        headers=dict(
-                                                            Authorization='Bearer ' + json.loads(
-                                                                resp_login.data.decode()
-                                                            )['auth_token']
-                                                        ))
+            response = self.client.get('/v1/users/999', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist.', data['message'])
@@ -250,17 +209,11 @@ class TestUserService(BaseTestCase):
                 '/v1/auth/login',
                 data=json.dumps(dict(
                     email='test@test.com',
-                    password='test',
-                    device=dict(device_id=uuid.uuid4().hex, device_type="apple")
+                    password='test'
                 )),
                 content_type='application/json'
             )
-            response = self.client.get('/v1/users',
-                                        headers=dict(
-                                            Authorization='Bearer ' + json.loads(
-                                                resp_login.data.decode()
-                                            )['auth_token']
-                                        ))
+            response = self.client.get('/v1/users', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data['data']['users']), 3)
@@ -278,5 +231,3 @@ class TestUserService(BaseTestCase):
             self.assertIn('fletcher@realpython.com', data['data']['users'][0]['email'])
 
             self.assertIn('success', data['status'])
-
-
