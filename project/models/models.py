@@ -62,7 +62,7 @@ class Device(db.Model):
     device_id = db.Column(db.String(128), unique=True, nullable=False)
     device_type = db.Column(db.String(128), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
-    pn_token = db.Column(db.String(128), unique=True)
+    pn_token = db.Column(db.String(256), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     user = db.relationship('User', backref=db.backref('devices', lazy='joined'))
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

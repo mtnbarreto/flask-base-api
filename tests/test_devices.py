@@ -3,7 +3,7 @@ import time
 import uuid
 
 from project import db
-from project.models.models import User, UserRole
+from project.models.models import User, UserRole, Device
 from project.utils.constants import Constants
 from tests.base import BaseTestCase
 from tests.utils import add_device, add_user
@@ -13,7 +13,7 @@ class TestDevicesBlueprint(BaseTestCase):
 
     def test_device_registration(self):
         with self.client:
-            add_user('test', 'test@test.com', 'test', roles=UserRole.USER)
+            user = add_user('test', 'test@test.com', 'test', roles=UserRole.USER)
             resp_login = self.client.post(
                 '/v1/auth/login',
                 data=json.dumps(dict(
@@ -39,6 +39,14 @@ class TestDevicesBlueprint(BaseTestCase):
             self.assertTrue(data['message'] == 'Device successfully registered.')
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 200)
+
+
+            device = Device.first_by(device_id=device_id)
+            self.assertEqual(device.pn_token, pn_token)
+            self.assertEqual(device.device_type, 'apple')
+            self.assertEqual(device.active, True)
+            self.assertEqual(device.user_id, user.id)
+
 
 
     def test_login_with_same_device_id(self):
