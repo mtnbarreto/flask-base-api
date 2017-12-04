@@ -56,11 +56,11 @@ def recreate_db():
 @manager.command
 def seed_db():
     """Seeds the database."""
-    eventDesc = EventDescriptor(id=1, name="Event Name", description="Event Description")
+    eventDesc = EventDescriptor(id=1, name="Seed Events Name", description="Seed db Event from {1}")
     db.session.add(eventDesc)
     group = Group(name="Group Name")
     db.session.add(group)
-    user1 = User(username='martin', email="mtn.barreto@gmail.com", password="password", cell_phone_number="+59898983510")
+    user1 = User(username='mtn.barreto', email="mtn.barreto@gmail.com", password="password", cell_phone_number="+59898983510")
     user2 = User(username='barreto', email="barretomartin1984@gmail.com", password="password")
     db.session.add(user1)
     db.session.add(user2)
@@ -84,15 +84,6 @@ def cov():
         COV.erase()
         return 0
     return 1
-
-
-from project.utils.twilio import send_account_verification_code
-
-@manager.command
-def send_test_sms():
-    """Send test sms with envoronment configuration."""
-    user = db.session.query(User).filter(User.username == 'martin').first()
-    send_account_verification_code(user = user)
 
 if __name__ == '__main__':
     manager.run()

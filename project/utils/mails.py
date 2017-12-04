@@ -6,7 +6,7 @@ from project.tasks.mail_tasks import send_async_registration_email, send_async_p
 
 def password_recovery_user(user, token):
     href = request.base_url + '/' + token
-    send_async_password_recovery_email(subject="Password Recovery by Flask Base Api! %s" % user.username,
+    send_async_password_recovery_email.delay(subject="Password Recovery by Flask Base Api! %s" % user.username,
                                     recipient=user.email,
                                      text_body=render_template("auth/password_recovery_user.txt", user=user),
                                      html_body=render_template("auth/password_recovery_user.html", user=user, href=href))

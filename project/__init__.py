@@ -92,7 +92,7 @@ def create_app():
 
 def make_celery(app):
     app = app or create_app()
-    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks'])  #backend=conf['CELERY_RESULT_BACKEND']
+    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks', 'project.tasks.push_notification_tasks'])  #backend=conf['CELERY_RESULT_BACKEND']
     # backend=app.config['CELERY_RESULT_BACKEND'] app.import_name
     celery.conf.update(app.config)
     TaskBase = celery.Task

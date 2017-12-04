@@ -51,6 +51,20 @@ class Event(db.Model):
     def __init__(self, event_descriptor_id):
         self.event_descriptor_id = event_descriptor_id
 
+    def push_notification_data(self):
+        event_descriptor = self.event_descriptor
+        message_template = event_descriptor.description
+        if self.entity_description:
+            message_template = message_template.replace("{1}", self.entity_description)
+        if self.entity_2_description:
+            message_template = message_template.replace("{2}", self.entity_2_description)
+        if self.entity_3_description:
+            message_template = message_template.replace("{3}", self.entity_3_description)
+        devices = Device.query_active_devices_for_group(group=self.group, discart_users_id=[self.creator_id]).all()
+        pn_tokens = [device.pn_token for device in devices]
+        return ("Hi", message_template, pn_tokens)
+
+
 class UserRole(IntFlag):
     USER  = 1
     USER_ADMIN = 2
@@ -78,6 +92,16 @@ class Device(db.Model):
         self.updated_at = created_at
 
     @staticmethod
+    def query_active_devices_for_user(user):
+        return Device.query.filter(Device.user_id==user.id, Device.active==True, Device.pn_token.isnot(None))
+
+    @staticmethod
+    def query_active_devices_for_group(group, discart_user_ids=[]):
+        user_ids = [user.user_id for user in group.associated_users if user.user_id not in discart_user_ids]
+        return Device.query.filter(Device.user_id.in_(tuple(user_ids)), Device.active==True, Device.pn_token.isnot(None))
+
+
+    @staticmethod
     def create_or_update(device_id, device_type, user = None, active=True, pn_token=None):
         device = Device.first_by(device_id = device_id)
         if not device:
@@ -90,12 +114,17 @@ class Device(db.Model):
                 device.user = user
             if pn_token is not None:
                 device.pn_token = pn_token
-        device
+        return device
 
     @staticmethod
     def first_by(**kwargs):
         """Get first db device that match to device_id"""
         return Device.query.filter_by(**kwargs).first()
+
+    @staticmethod
+    def first(*criterion):
+        """Get first db entity that match to criterium"""
+        return Device.query.filter(*criterion)
 
 
 class UserGroupAssociation(db.Model):
@@ -123,6 +152,11 @@ class Group(db.Model):
 
     def __init__(self, name):
         self.name = name
+
+    @staticmethod
+    def get(id):
+        """Get db entity that match the id"""
+        return Group.query.get(id)
 
 class User(db.Model):
     __tablename__ = "users"
