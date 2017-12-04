@@ -6,3 +6,6 @@ class Constants:
         DEVICE_ID = 'X-Device-Id'
         DEVICE_TYPE = 'X-Device-Type'
         AUTHORIZATION = 'Authorization'
+
+    class EventDescriptorIds:
+        SEED_EVENT_ID = 1

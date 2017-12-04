@@ -1,32 +1,16 @@
 # project/__init__.py
 import os
-import datetime
-import logging
 
-from flask import Flask, jsonify, Config
+from flask import Flask, Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from twilio.rest import Client
 from celery import Celery
-from flask_cors import CORS
 from raven.contrib.flask import Sentry
 from pyfcm import FCMNotification
-from flask.json import JSONEncoder
-
-
-class CustomJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        try:
-            if isinstance(obj, datetime.date):
-                return obj.isoformat()
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+from project.api.common.base_definitions import BaseFlask
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
@@ -44,26 +28,12 @@ push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 
 def create_app():
     # instantiate the app
-    app = Flask(__name__, template_folder='./templates', static_folder='./static')
-    # set up custom encoder to handle date as ISO8601 format
-    app.json_encoder = CustomJSONEncoder
-    # enable CORS
-    CORS(app)
-
-    # set config
-    app_settings = os.getenv('APP_SETTINGS')
-    app.config.from_object(app_settings)
+    app = BaseFlask(__name__)
 
     # configure sentry
     if not app.debug and not app.testing:
         global sentry
         sentry = Sentry(app, dsn=app.config['SENTRY_DSN'])
-
-    # configure logging
-    handler = logging.FileHandler(app.config['LOGGING_LOCATION'])
-    handler.setLevel(app.config['LOGGING_LEVEL'])
-    handler.setFormatter(logging.Formatter(app.config['LOGGING_FORMAT']))
-    app.logger.addHandler(handler)
 
     # set up extensions
     db.init_app(app)
@@ -88,12 +58,12 @@ def create_app():
     app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)
+    app.register_error_handler(Exception, error_handlers.handle_general_exception)
     return app
 
 def make_celery(app):
     app = app or create_app()
-    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks'])  #backend=conf['CELERY_RESULT_BACKEND']
-    # backend=app.config['CELERY_RESULT_BACKEND'] app.import_name
+    celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks', 'project.tasks.push_notification_tasks'], backend=app.config['CELERY_RESULT_BACKEND'])
     celery.conf.update(app.config)
     TaskBase = celery.Task
     class ContextTask(TaskBase):
