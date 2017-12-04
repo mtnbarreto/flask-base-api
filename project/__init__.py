@@ -1,9 +1,8 @@
 # project/__init__.py
 import os
-import datetime
 import logging
 
-from flask import Flask, jsonify, Config, Response
+from flask import Flask, Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
@@ -13,34 +12,7 @@ from celery import Celery
 from flask_cors import CORS
 from raven.contrib.flask import Sentry
 from pyfcm import FCMNotification
-from flask.json import JSONEncoder
-
-
-class BaseJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        try:
-            if isinstance(obj, datetime.date):
-                return obj.isoformat()
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
-
-class BaseResponse(Response):
-    default_mimetype = 'application/json'
-
-    @classmethod
-    def force_type(cls, rv, environ=None):
-        if isinstance(rv, dict):
-            rv = jsonify(rv)
-        return super(BaseResponse, cls).force_type(rv, environ)
-
-
-class BaseFlask(Flask):
-    response_class = BaseResponse
-    json_encoder = BaseJSONEncoder # set up custom encoder to handle date as ISO8601 format
+from project.api.common.base_definitions import BaseFlask
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))

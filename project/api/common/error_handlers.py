@@ -1,3 +1,5 @@
+# project/api/common/error_handlers.py
+
 from flask import jsonify
 
 def handle_exception(error):
