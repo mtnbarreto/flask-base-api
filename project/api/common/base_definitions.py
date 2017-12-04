@@ -3,6 +3,7 @@
 import datetime, os, logging
 from flask import Flask, jsonify, Response
 from flask.json import JSONEncoder
+from flask_cors import CORS
 
 
 class BaseJSONEncoder(JSONEncoder):
@@ -50,3 +51,6 @@ class BaseFlask(Flask):
         handler.setLevel(self.config['LOGGING_LEVEL'])
         handler.setFormatter(logging.Formatter(self.config['LOGGING_FORMAT']))
         self.logger.addHandler(handler)
+
+        # enable CORS
+        CORS(self)

@@ -8,7 +8,6 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from twilio.rest import Client
 from celery import Celery
-from flask_cors import CORS
 from raven.contrib.flask import Sentry
 from pyfcm import FCMNotification
 from project.api.common.base_definitions import BaseFlask
@@ -30,8 +29,6 @@ push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 def create_app():
     # instantiate the app
     app = BaseFlask(__name__)
-    # enable CORS
-    CORS(app)
 
     # configure sentry
     if not app.debug and not app.testing:
@@ -61,6 +58,7 @@ def create_app():
     app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)
+    app.register_error_handler(Exception, error_handlers.handle_general_exception)
     return app
 
 def make_celery(app):

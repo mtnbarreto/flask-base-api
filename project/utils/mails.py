@@ -1,4 +1,4 @@
-# project/api/utils/mails.py
+# project/utils/mails.py
 
 from flask_mail import Message
 from flask import render_template, request

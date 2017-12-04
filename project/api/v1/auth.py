@@ -9,7 +9,7 @@ from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
 from project.utils.constants import Constants
 from facepy import GraphAPI
-
+from project.utils.helpers import session_scope
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -22,50 +22,41 @@ def register_user():
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
-    if not password:
+    if not password or not username or not email:
         raise exceptions.InvalidPayload()
-    try:
-        # check for existing user
-        user = User.first(or_(User.username == username, User.email == email))
-        if not user:
-            # add new user to db
-            new_user = User(
-                username=username,
-                email=email,
-                password=password
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            # save the device
-            if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
-                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
-                device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+    # check for existing user
+    user = User.first(or_(User.username == username, User.email == email))
+    if not user:
+        # add new user to db
+        new_user = User(username=username, email=email, password=password)
+        with session_scope(db.session) as session:
+            session.add(new_user)
+        # save the device
+        if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
+            device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+            device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+            with session_scope(db.session) as session:
                 Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
-                db.session.commit()
-            # generate auth token
-            auth_token = new_user.encode_auth_token()
-            # send registration email
-            if not current_app.testing:
-                from project.utils.mails import send_registration_email
-                send_registration_email(new_user)
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully registered.',
-                'auth_token': auth_token.decode()
-            }
-            return response_object, 201
-        else:
-            # user already registered, set False to device.active
-            if Constants.HttpHeaders.DEVICE_ID in request.headers:
-                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
-                device = Device.first_by(device_id=device_id)
-                if device:
+        # generate auth token
+        auth_token = new_user.encode_auth_token()
+        # send registration email
+        if not current_app.testing:
+            from project.utils.mails import send_registration_email
+            send_registration_email(new_user)
+        return {
+            'status': 'success',
+            'message': 'Successfully registered.',
+            'auth_token': auth_token.decode()
+        }, 201
+    else:
+        # user already registered, set False to device.active
+        if Constants.HttpHeaders.DEVICE_ID in request.headers:
+            device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+            device = Device.first_by(device_id=device_id)
+            if device:
+                with session_scope(db.session) as session:
                     device.active = False
-                    db.session.commit()
-            raise exceptions.BusinessException(message='Sorry. That user already exists.')
-    except (exc.IntegrityError, ValueError) as e:
-        db.session.rollback()
-        raise exceptions.InvalidPayload()
+        raise exceptions.BusinessException(message='Sorry. That user already exists.')
 
 
 @auth_blueprint.route('/auth/login', methods=['POST'])
@@ -78,43 +69,32 @@ def login_user():
     password = post_data.get('password')
     if not password:
         raise exceptions.InvalidPayload()
-    try:
-        # fetch the user data
-        user = User.first_by(email=email)
-        if user and bcrypt.check_password_hash(user.password, password):
-            # register device if needed
-            if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
-                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
-                device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+
+    # fetch the user data
+    user = User.first_by(email=email)
+    if user and bcrypt.check_password_hash(user.password, password):
+        # register device if needed
+        if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
+            device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+            device_type = request.headers.get(Constants.HttpHeaders.DEVICE_TYPE)
+            with session_scope(db.session) as session:
                 Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
-                db.session.commit()
-            auth_token = user.encode_auth_token()
-            if auth_token:
-                response_object = {
-                    'status': 'success',
-                    'message': 'Successfully logged in.',
-                    'auth_token': auth_token.decode()
-                }
-                return response_object, 200
-        else:
-            # user is not logged in, set False to device.active
-            if Constants.HttpHeaders.DEVICE_ID in request.headers:
-                device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
-                device = Device.first_by(device_id=device_id)
-                if device:
+        auth_token = user.encode_auth_token()
+        if auth_token:
+            return {
+                'status': 'success',
+                'message': 'Successfully logged in.',
+                'auth_token': auth_token.decode()
+            }, 200
+    else:
+        # user is not logged in, set False to device.active
+        if Constants.HttpHeaders.DEVICE_ID in request.headers:
+            device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
+            device = Device.first_by(device_id=device_id)
+            if device:
+                with session_scope(db.session) as session:
                     device.active = False
-                    db.session.commit()
-            response_object = {
-                'status': 'error',
-                'message': 'User does not exist.'
-            }
-            return response_object, 404
-    except Exception as e:
-        response_object = {
-            'status': 'error',
-            'message': 'Try again.'
-        }
-        return response_object, 500
+        raise exceptions.NotFoundException(message='User does not exist.')
 
 
 @auth_blueprint.route('/auth/logout', methods=['GET'])
@@ -125,13 +105,12 @@ def logout_user(user_id):
         device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
         device = Device.first_by(device_id=device_id)
         if device:
-            device.active = False
-            db.session.commit()
-    response_object = {
+            with session_scope(db.session) as session:
+                device.active = False
+    return {
         'status': 'success',
         'message': 'Successfully logged out.'
-    }
-    return response_object, 200
+    }, 200
 
 
 @auth_blueprint.route('/auth/status', methods=['GET'])
@@ -157,37 +136,26 @@ def password_recovery():
     post_data = request.get_json()
     if not post_data:
         raise exceptions.InvalidPayload()
-
     email = post_data.get('email')
+    if not email:
+        raise exceptions.InvalidPayload()
 
-    try:
-        # fetch the user data
-        user = User.first_by(email=email)
-        if user:
-            token = user.encode_password_token(user.id)
+    # fetch the user data
+    user = User.first_by(email=email)
+    if user:
+        token = user.encode_password_token(user.id)
+        with session_scope(db.session) as session:
             user.token_hash = bcrypt.generate_password_hash(token,
                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
-
-            db.session.commit()  # commit token_hash
-            if not current_app.testing:
-                from project.utils.mails import send_password_recovery_email
-                send_password_recovery_email(user, token.decode())  # send recovery email
-
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully sent email with password recovery.',
-            }
-
-            return response_object, 200
-        else:
-            response_object = {
-                'status': 'error',
-                'message': 'Login/email does not exist, please write a valid login/email'
-            }
-            return response_object, 404
-
-    except Exception as e:
-        raise exceptions.ServerErrorException()
+        if not current_app.testing:
+            from project.utils.mails import send_password_recovery_email
+            send_password_recovery_email(user, token.decode())  # send recovery email
+        return {
+            'status': 'success',
+            'message': 'Successfully sent email with password recovery.',
+        }, 200
+    else:
+        raise exceptions.NotFoundException(message='Login/email does not exist, please write a valid login/email')
 
 
 @auth_blueprint.route('/auth/password', methods=['POST'])
@@ -196,34 +164,24 @@ def password_reset():
     post_data = request.get_json()
     if not post_data:
         raise exceptions.InvalidPayload()
-
     token = post_data.get('token')
     pw_new = post_data.get('password')
+    if not token or not pw_new:
+        raise exceptions.InvalidPayload()
 
-    try:
-        # fetch the user data
-        user_id = User.decode_password_token(token)
-        user = User.query.filter_by(id=user_id).first()
-        if user and bcrypt.check_password_hash(user.token_hash, token):
-            user.password = bcrypt.generate_password_hash(pw_new,
-                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
-            db.session.commit()  # commit new password
+    # fetch the user data
+    user_id = User.decode_password_token(token)
+    user = User.get(user_id)
+    if user and bcrypt.check_password_hash(user.token_hash, token):
+        with session_scope(db.session) as session:
+            user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        return {
+            'status': 'success',
+            'message': 'Successfully reseted password.',
+        }, 200
+    else:
+        raise exceptions.NotFoundException(message='Invalid reset, please try again')
 
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully reseted password.',
-            }
-
-            return response_object, 200
-        else:
-            response_object = {
-                'status': 'error',
-                'message': 'Invalid reset, please try again'
-            }
-            return response_object, 404
-
-    except Exception as e:
-        raise exceptions.ServerErrorException()
 
 
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
@@ -234,9 +192,9 @@ def facebook_login():
     post_data = request.get_json()
     if not post_data:
         raise exceptions.InvalidPayload()
-
     fb_access_token = post_data.get('fb_access_token')
-
+    if not fb_access_token:
+        raise exceptions.InvalidPayload()
     try:
         graph = GraphAPI(fb_access_token)
         profile = graph.get("me?fields=id,name,email,link")
@@ -244,12 +202,11 @@ def facebook_login():
         raise exceptions.UnautorizedException
 
     fb_user = User.first(User.fb_id == profile['id'])
-
-    try:
-        if not fb_user:
-            # Not an existing user so get info, register and login
-            user = User.first(User.email == profile['email'])
-            code = 200
+    if not fb_user:
+        # Not an existing user so get info, register and login
+        user = User.first(User.email == profile['email'])
+        code = 200
+        with session_scope(db.session) as session:
             if user:
                 user.fb_access_token = fb_access_token
                 user.fb_id = profile['id']
@@ -259,28 +216,21 @@ def facebook_login():
                             email=profile['email'],
                             fb_id=profile['id'],
                             fb_access_token=fb_access_token)
-                db.session.add(user)
+                session.add(user)
                 code = 201
-
-            db.session.commit()
-            # generate auth token
-            auth_token = user.encode_auth_token()
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully facebook registered.',
-                'auth_token': auth_token.decode()
-            }
-            return response_object, code
-        else:
-            auth_token = fb_user.encode_auth_token()
+        # generate auth token
+        auth_token = user.encode_auth_token()
+        return {
+            'status': 'success',
+            'message': 'Successfully facebook registered.',
+            'auth_token': auth_token.decode()
+        }, code
+    else:
+        auth_token = fb_user.encode_auth_token()
+        with session_scope(db.session) as session:
             fb_user.fb_access_token = fb_access_token
-            db.session.commit()
-            response_object = {
-                'status': 'success',
-                'message': 'Successfully facebook login.',
-                'auth_token': auth_token.decode()
-            }
-            return response_object, 200
-    except Exception as e:
-        db.session.rollback()
-        raise exceptions.ServerErrorException()
+        return {
+            'status': 'success',
+            'message': 'Successfully facebook login.',
+            'auth_token': auth_token.decode()
+        }, 200
