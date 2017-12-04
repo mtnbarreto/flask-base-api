@@ -1,6 +1,5 @@
 # project/__init__.py
 import os
-import logging
 
 from flask import Flask, Config
 from flask_sqlalchemy import SQLAlchemy
@@ -30,24 +29,14 @@ push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 
 def create_app():
     # instantiate the app
-    app = BaseFlask(__name__, template_folder='./templates', static_folder='./static')
+    app = BaseFlask(__name__)
     # enable CORS
     CORS(app)
-
-    # set config
-    app_settings = os.getenv('APP_SETTINGS')
-    app.config.from_object(app_settings)
 
     # configure sentry
     if not app.debug and not app.testing:
         global sentry
         sentry = Sentry(app, dsn=app.config['SENTRY_DSN'])
-
-    # configure logging
-    handler = logging.FileHandler(app.config['LOGGING_LOCATION'])
-    handler.setLevel(app.config['LOGGING_LEVEL'])
-    handler.setFormatter(logging.Formatter(app.config['LOGGING_FORMAT']))
-    app.logger.addHandler(handler)
 
     # set up extensions
     db.init_app(app)
