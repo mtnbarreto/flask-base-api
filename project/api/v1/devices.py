@@ -26,7 +26,7 @@ def register_device():
             'status': 'success',
             'message': 'Device successfully registered.'
         }
-        return jsonify(response_object), 200
+        return response_object, 200
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
         raise exceprions.InvalidPayload()
@@ -49,7 +49,7 @@ def connect_device_with_logged_in_user(logged_in_user_id, device_id):
             'status': 'success',
             'message': 'Device successfully registered.'
         }
-        return jsonify(response_object), 200
+        return response_object, 200
     except (exc.IntegrityError, ValueError) as e:
         db.session.rollback()
         raise exceprions.InvalidPayload()

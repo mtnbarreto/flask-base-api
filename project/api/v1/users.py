@@ -65,7 +65,7 @@ def add_user(logged_in_user):
                 'status': 'success',
                 'message': f'{email} was added!'
             }
-            return jsonify(response_object), 201
+            return response_object, 201
         else:
             raise exceptions.BusinessException(message='Sorry. That email or username already exists.')
     except (exc.IntegrityError, ValueError) as e:
@@ -90,7 +90,7 @@ def get_single_user(logged_in_user, user_id):
                   'created_at': user.created_at
                 }
             }
-            return jsonify(response_object), 200
+            return response_object, 200
     except ValueError:
         raise exceptions.NotFoundException(message='User does not exist.')
 
@@ -116,4 +116,4 @@ def get_all_users(*unused):
             'users': users_list
         }
     }
-    return jsonify(response_object), 200
+    return response_object, 200

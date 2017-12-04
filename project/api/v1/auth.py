@@ -44,17 +44,16 @@ def register_user():
                 db.session.commit()
             # generate auth token
             auth_token = new_user.encode_auth_token()
+            # send registration email
+            if not current_app.testing:
+                from project.utils.mails import send_registration_email
+                send_registration_email(new_user)
             response_object = {
                 'status': 'success',
                 'message': 'Successfully registered.',
                 'auth_token': auth_token.decode()
             }
-            # send registration email
-            if not current_app.testing:
-                from project.utils.mails import send_registration_email
-                send_registration_email(new_user)
-
-            return jsonify(response_object), 201
+            return response_object, 201
         else:
             # user already registered, set False to device.active
             if Constants.HttpHeaders.DEVICE_ID in request.headers:
@@ -96,7 +95,7 @@ def login_user():
                     'message': 'Successfully logged in.',
                     'auth_token': auth_token.decode()
                 }
-                return jsonify(response_object), 200
+                return response_object, 200
         else:
             # user is not logged in, set False to device.active
             if Constants.HttpHeaders.DEVICE_ID in request.headers:
@@ -109,13 +108,13 @@ def login_user():
                 'status': 'error',
                 'message': 'User does not exist.'
             }
-            return jsonify(response_object), 404
+            return response_object, 404
     except Exception as e:
         response_object = {
             'status': 'error',
             'message': 'Try again.'
         }
-        return jsonify(response_object), 500
+        return response_object, 500
 
 
 @auth_blueprint.route('/auth/logout', methods=['GET'])
@@ -132,7 +131,7 @@ def logout_user(user_id):
         'status': 'success',
         'message': 'Successfully logged out.'
     }
-    return jsonify(response_object), 200
+    return response_object, 200
 
 
 @auth_blueprint.route('/auth/status', methods=['GET'])
@@ -149,7 +148,7 @@ def get_user_status(user_id):
             'created_at': user.created_at
         }
     }
-    return jsonify(response_object), 200
+    return response_object, 200
 
 
 @auth_blueprint.route('/auth/password_recovery', methods=['POST'])
@@ -170,22 +169,22 @@ def password_recovery():
                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
 
             db.session.commit()  # commit token_hash
-
-            from project.utils.mails import password_recovery_user
-            password_recovery_user(user, token.decode())  # send recovery email
+            if not current_app.testing:
+                from project.utils.mails import send_password_recovery_email
+                send_password_recovery_email(user, token.decode())  # send recovery email
 
             response_object = {
                 'status': 'success',
                 'message': 'Successfully sent email with password recovery.',
             }
 
-            return jsonify(response_object), 200
+            return response_object, 200
         else:
             response_object = {
                 'status': 'error',
                 'message': 'Login/email does not exist, please write a valid login/email'
             }
-            return jsonify(response_object), 404
+            return response_object, 404
 
     except Exception as e:
         raise exceptions.ServerErrorException()
@@ -201,7 +200,6 @@ def password_reset():
     token = post_data.get('token')
     pw_new = post_data.get('password')
 
-
     try:
         # fetch the user data
         user_id = User.decode_password_token(token)
@@ -216,13 +214,13 @@ def password_reset():
                 'message': 'Successfully reseted password.',
             }
 
-            return jsonify(response_object), 200
+            return response_object, 200
         else:
             response_object = {
                 'status': 'error',
                 'message': 'Invalid reset, please try again'
             }
-            return jsonify(response_object), 404
+            return response_object, 404
 
     except Exception as e:
         raise exceptions.ServerErrorException()
@@ -272,7 +270,7 @@ def facebook_login():
                 'message': 'Successfully facebook registered.',
                 'auth_token': auth_token.decode()
             }
-            return jsonify(response_object), code
+            return response_object, code
         else:
             auth_token = fb_user.encode_auth_token()
             fb_user.fb_access_token = fb_access_token
@@ -282,7 +280,7 @@ def facebook_login():
                 'message': 'Successfully facebook login.',
                 'auth_token': auth_token.decode()
             }
-            return jsonify(response_object), 200
+            return response_object, 200
     except Exception as e:
         db.session.rollback()
         raise exceptions.ServerErrorException()

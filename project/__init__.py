@@ -3,7 +3,7 @@ import os
 import datetime
 import logging
 
-from flask import Flask, jsonify, Config
+from flask import Flask, jsonify, Config, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
@@ -16,7 +16,7 @@ from pyfcm import FCMNotification
 from flask.json import JSONEncoder
 
 
-class CustomJSONEncoder(JSONEncoder):
+class BaseJSONEncoder(JSONEncoder):
     def default(self, obj):
         try:
             if isinstance(obj, datetime.date):
@@ -27,6 +27,20 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return list(iterable)
         return JSONEncoder.default(self, obj)
+
+class BaseResponse(Response):
+    default_mimetype = 'application/json'
+
+    @classmethod
+    def force_type(cls, rv, environ=None):
+        if isinstance(rv, dict):
+            rv = jsonify(rv)
+        return super(BaseResponse, cls).force_type(rv, environ)
+
+
+class BaseFlask(Flask):
+    response_class = BaseResponse
+    json_encoder = BaseJSONEncoder # set up custom encoder to handle date as ISO8601 format
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
@@ -44,9 +58,7 @@ push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])
 
 def create_app():
     # instantiate the app
-    app = Flask(__name__, template_folder='./templates', static_folder='./static')
-    # set up custom encoder to handle date as ISO8601 format
-    app.json_encoder = CustomJSONEncoder
+    app = BaseFlask(__name__, template_folder='./templates', static_folder='./static')
     # enable CORS
     CORS(app)
 
