@@ -1,7 +1,6 @@
 # project/tasks/mail_tasks.py
 from flask_mail import Message
-from project import celery
-from project import mail
+from project import celery, mail
 
 @celery.task
 def send_async_registration_email(subject, recipient, text_body, html_body):

@@ -97,7 +97,8 @@ class Device(db.Model):
         return Device.query.filter(Device.user_id==user.id, Device.active==True, Device.pn_token.isnot(None))
 
     @staticmethod
-    def query_active_devices_for_group(group, discart_user_ids=[]):
+    def query_active_devices_for_group(group, discart_user_ids=None):
+        discart_user_ids = discart_user_ids or []
         user_ids = [user.user_id for user in group.associated_users if user.user_id not in discart_user_ids]
         return Device.query.filter(Device.user_id.in_(tuple(user_ids)), Device.active==True, Device.pn_token.isnot(None))
 

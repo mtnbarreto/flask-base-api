@@ -21,7 +21,7 @@ class BaseConfig:
     MAIL_PORT = os.environ.get('MAIL_PORT')
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS').lower() == 'true'
     MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') # IAM: ses-smtp-user.20171116-024416
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -37,8 +37,6 @@ class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     BCRYPT_LOG_ROUNDS = 4
-    MAIL_SUPPRESS_SEND = True
-
 
 class TestingConfig(BaseConfig):
     """Testing configuration"""

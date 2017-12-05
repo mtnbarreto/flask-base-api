@@ -1,7 +1,6 @@
 # project/tasks/twilio_tasks.py
 
-from project import celery
-from project import twilio_client
+from project import celery, twilio_client
 
 
 @celery.task
