@@ -234,3 +234,72 @@ def facebook_login():
             'message': 'Successfully facebook login.',
             'auth_token': auth_token.decode()
         }, 200
+
+
+@auth_blueprint.route('/auth/cellphone', methods=['POST'])
+@authenticate
+def register_user_cellphone(logged_user_id):
+    ''' generates cellphone_validation_code, idempotent (could be used for resend cellphone_validation_code)
+        allows just 1 user per cellphone validation!
+    '''
+    post_data = request.get_json()
+    if not post_data:
+        raise exceptions.InvalidPayload()
+
+    cellphone_number = post_data.get('cellphone_number')
+    cellphone_cc = post_data.get('cellphone_cc')
+    if not cellphone_number or not cellphone_cc:
+        raise exceptions.InvalidPayload
+
+    # check for existing user
+    user = User.get(logged_user_id)
+
+    if user.cellphone_verified and user.cellphone_number == cellphone_number and user.cellphone_cc == cellphone_cc:
+        raise exceptions.BusinessException(message='Registered. You have already registered this cellphone number.')
+
+    # user exists
+    user.cellphone_number = cellphone_number
+    user.cellphone_cc = cellphone_cc
+
+    validation_code, validation_code_expiration = User.generate_cellphone_validation_code()
+    with session_scope(db.session) as session:
+        user.validation_code = validation_code
+        user.validation_code_expiration = validation_code_expiration
+        user.cellphone_verified = False
+
+    if current_app.testing:
+        from project.utils.twilio import send_cellphone_verification_code
+        send_cellphone_verification_code(user, validation_code)
+
+    return {
+        'status': 'success',
+        'message': 'Successfully sent validation code.'
+    }, 200
+
+
+@auth_blueprint.route('/auth/cellphone/verify', methods=['PUT'])
+@authenticate
+def verify_user_cellphone(logged_user_id):
+    ''' verifies cellphone_validation_code, idempotent (could be used many times) '''
+    post_data = request.get_json()
+    if not post_data:
+        raise exceptions.InvalidPayload()
+
+    validation_code = post_data.get('cellphone_validation_code')
+    user = User.get(logged_user_id)
+
+    valid_code, messagge = user.verify_cellphone_validation_code(validation_code)
+    if not valid_code:
+        raise exceptions.BussinessException(messagge=messagge)
+
+    with session_scope(db.session) as session:
+
+        user.cellphone_validation_code = None
+        user.cellphone_validation_code_expiration = None
+        user.cellphone_validation_date = utc.now()
+
+    return response_object = {
+        'status': 'success',
+        'message': 'Successful cellphone validation.'
+    }, 200
+

@@ -1,11 +1,11 @@
 # project/api/utils/twilio.py
 
-from flask import current_app
-from random import randint
-from project import twilio_client
+from project import app
+from project.tasks.twilio_tasks import send_async_sms
+
 
 def send_sms(to, body):
-    message = twilio_client.messages.create(to=to, from_=current_app.config["TWILIO_FROM_NUMBER"], body=body)
+    send_async_sms.delay(to=to, from_=app.config['TWILIO_FROM_NUMBER'], body=body)
 
-def send_account_verification_code(user):
-    send_sms(to = user.cell_phone_number, body = "Your verification code is %s" % randint(1000, 9999))
+def send_cellphone_verification_code(user, validation_code):
+    send_sms(to=user.cellphone_cc + user.cellphone_number, body="Your verification code is %s" % validation_code)

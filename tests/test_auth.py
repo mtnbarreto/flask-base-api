@@ -378,3 +378,114 @@ class TestAuthBlueprint(BaseTestCase):
             #  check db password have really changed
             user_after = User.query.filter_by(id=user.id).first()
             self.assertNotEqual(user_password, user_after.password)
+
+    def test_register_verify_cellphone(self):
+        email = 'test@test.com'
+        user = add_user('justatest1', email, 'password')
+
+
+
+
+        with self.client:
+                        # user login
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password='password'
+                )),
+                content_type='application/json'
+            )
+
+            response = self.client.post(
+                '/v1/auth/cellphone/register',
+                data=json.dumps(dict(
+                    email=email,
+                    cellphone_number='99993298',
+                    cellphone_cc='+598'
+                )),
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['message'] == 'Successfully sent validation code.')
+            self.assertEqual(response.status_code, 200)
+            self.assertNotEqual(user.cellphone_validation_code, None)
+
+            response = self.client.post(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    email=email,
+                    cellphone_validation_code=user.cellphone_validation_code
+                )),
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['message'] == 'Successful cellphone validation.')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(user.cellphone_validation_code, None)
+
+    def test_verify_cellphone_user_already_verified(self):
+        email = 'test@test.com'
+        user = add_user('justatest1', email, 'password')
+
+        with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password='password'
+                )),
+                content_type='application/json'
+            )
+
+            response = self.client.post(
+                '/v1/auth/cellphone/register',
+                data=json.dumps(dict(
+                    email=email,
+                    cellphone_number='99993298',
+                    cellphone_cc='+598'
+                )),
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['message'] == 'Successfully sent validation code.')
+            self.assertEqual(response.status_code, 200)
+            self.assertNotEqual(user.cellphone_validation_code, None)
+
+        with self.client:
+            response = self.client.post(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    email=email,
+                    cellphone_validation_code=user.cellphone_validation_code
+                )),
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertTrue(data['status'] == 'success')
+            self.assertTrue(data['message'] == 'Successful cellphone validation.')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(user.cellphone_validation_code, None)
+
+        # try to verify again
+        with self.client:
+            response = self.client.post(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    email=email,
+                    cellphone_number='99993298',
+                    cellphone_cc='+598'
+                )),
+                content_type='application/json',
+                headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, 400)
+            self.assertIn(
+                'Verified. You have already verified this cellphone number.', data['message'])
+            self.assertIn('error', data['status'])
