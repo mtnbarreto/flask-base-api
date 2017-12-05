@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
-from project.api.common import exceptions
+from project.api.common.utils import exceptions
 from sqlalchemy.ext.associationproxy import association_proxy
 from random import randint
 

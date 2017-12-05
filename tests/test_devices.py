@@ -4,7 +4,7 @@ import uuid
 
 from project import db
 from project.models.models import User, UserRole, Device
-from project.utils.constants import Constants
+from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
 from tests.utils import add_device, add_user
 

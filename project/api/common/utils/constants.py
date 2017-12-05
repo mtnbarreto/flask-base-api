@@ -1,4 +1,4 @@
-# project/utils/constants.py
+# project/api/common/utils/constants.py
 
 class Constants:
     class HttpHeaders:

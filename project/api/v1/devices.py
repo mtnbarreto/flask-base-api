@@ -1,9 +1,9 @@
 # project/api/devices.py
 
 from flask import Flask, Blueprint, jsonify, request
-from project.api.common import exceptions
+from project.api.common.utils import exceptions
 from project.models.models import Device, User
-from project.api.common.utils import authenticate
+from project.api.common.utils.decorators import authenticate
 from project import db
 
 devices_blueprint = Blueprint('devices', __name__, template_folder='../templates/devices')

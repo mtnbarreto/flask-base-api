@@ -5,7 +5,7 @@ import datetime
 import uuid
 
 from project import db
-from project.utils.constants import Constants
+from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
 from project.models.models import User, UserRole
 from tests.utils import add_user

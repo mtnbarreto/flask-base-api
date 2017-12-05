@@ -50,7 +50,7 @@ def create_app():
     app.register_blueprint(devices_blueprint, url_prefix='/v1')
 
     # register error handlers
-    from project.api.common import exceptions
+    from project.api.common.utils import exceptions
     from project.api.common import error_handlers
     app.register_error_handler(exceptions.InvalidPayload, error_handlers.handle_exception)
     app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)

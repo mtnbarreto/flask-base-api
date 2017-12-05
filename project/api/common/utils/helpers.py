@@ -1,6 +1,7 @@
-# project/utils/helpers.py
+# project/api/common/utils/helpers.py
+
 from contextlib import contextmanager
-from project.api.common.exceptions import ServerErrorException
+from project.api.common.utils.exceptions import ServerErrorException
 
 @contextmanager
 def session_scope(session):

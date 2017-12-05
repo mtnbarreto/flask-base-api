@@ -1,3 +1,5 @@
+# project/api/common/utils/push_notifications.py
+
 import logging
 from project.models.models import Event, EventDescriptor, Device
 from project.tasks.push_notification_tasks import send_async_push_notifications

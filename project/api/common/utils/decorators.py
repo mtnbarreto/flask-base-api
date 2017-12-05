@@ -1,8 +1,8 @@
-# project/api/common/exceptions.py
+# project/api/common/utils/decorators.py
 
 from flask import jsonify, request, abort
 from functools import wraps
-from project.api.common import exceptions
+from project.api.common.utils import exceptions
 from project.models.models import User, UserRole
 
 

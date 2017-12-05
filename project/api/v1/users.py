@@ -5,9 +5,9 @@ from flask import Flask, Blueprint, jsonify, request, render_template
 from project.models.models import User, UserRole, Group
 from project import db
 from sqlalchemy import exc, or_
-from project.api.common.utils import authenticate, privileges
+from project.api.common.utils.decorators import authenticate, privileges
 
-from project.api.common import exceptions
+from project.api.common.utils import exceptions
 
 
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
@@ -22,16 +22,16 @@ def ping_pong():
 @users_blueprint.route('/push_echo', methods=['POST'])
 @authenticate
 def push_echo(logged_in_user):
-    from project.utils.push_notification import send_notification_to_user
+    from project.api.common.utils.push_notification import send_notification_to_user
     creator = User.get(logged_in_user)
     send_notification_to_user(user=creator, message_title="Auto Message", message_body="😄😄😄😄😄")(event)
     return jsonify({
         'status': 'success',
         'message': 'pong!'
     })
-    # from project.utils.push_notification import send_notifications_for_event
+    # from project.api.common.utils.push_notification import send_notifications_for_event
     # from project.models.models import Event
-    # from project.utils.constants import Constants
+    # from project.api.common.utils.constants import Constants
     # we can also send a notification to a group
     # event = Event(event_descriptor_id=Constants.EventDescriptorIds.SEED_EVENT_ID)
     # creator = User.get(logged_in_user)

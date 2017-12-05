@@ -4,13 +4,13 @@ from flask import Blueprint, jsonify, request, abort, redirect, url_for, current
 from sqlalchemy import exc, or_
 
 from project import bcrypt, db
-from project.api.common import exceptions
-from project.api.common.utils import authenticate, privileges
+from project.api.common.utils import exceptions
+from project.api.common.utils.decorators import authenticate, privileges
 from project.models.models import User, Device, UserRole
-from project.utils.constants import Constants
+from project.api.common.utils.constants import Constants
 from facepy import GraphAPI
 from datetime import datetime
-from project.utils.helpers import session_scope
+from project.api.common.utils.helpers import session_scope
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -42,7 +42,7 @@ def register_user():
         auth_token = new_user.encode_auth_token()
         # send registration email
         if not current_app.testing:
-            from project.utils.mails import send_registration_email
+            from project.api.common.utils.mails import send_registration_email
             send_registration_email(new_user)
         return {
             'status': 'success',
@@ -149,7 +149,7 @@ def password_recovery():
             user.token_hash = bcrypt.generate_password_hash(token,
                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         if not current_app.testing:
-            from project.utils.mails import send_password_recovery_email
+            from project.api.common.utils.mails import send_password_recovery_email
             send_password_recovery_email(user, token.decode())  # send recovery email
         return {
             'status': 'success',
@@ -263,7 +263,7 @@ def register_user_cellphone(user_id):
         user.cellphone_validation_date = None
 
     if not current_app.testing:
-        from project.utils.twilio import send_cellphone_verification_code
+        from project.api.common.utils.twilio import send_cellphone_verification_code
         send_cellphone_verification_code(user, cellphone_validation_code)
 
     return {

@@ -1,4 +1,4 @@
-# project/api/utils/twilio.py
+# project/api/common/utils/twilio.py
 
 from project import app
 from project.tasks.twilio_tasks import send_async_sms

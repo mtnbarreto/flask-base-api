@@ -1,4 +1,4 @@
-# project/api/common/exceptions.py
+# project/api/common/utils/exceptions.py
 
 class APIException(Exception):
 
