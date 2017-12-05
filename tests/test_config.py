@@ -13,15 +13,12 @@ class TestDevelopmentConfig(TestCase):
 
     def test_app_is_development(self):
         self.assertFalse(current_app is None)
-        self.assertTrue(current_app.config['SECRET_KEY'] == os.environ.get('SECRET_KEY'))
+        self.assertEqual(current_app.config['SECRET_KEY'], os.environ.get('SECRET_KEY'))
         self.assertTrue(current_app.config['DEBUG'] is True)
-        self.assertTrue(
-            current_app.config['SQLALCHEMY_DATABASE_URI'] == os.environ.get('DATABASE_URL')
-        )
-        self.assertTrue(current_app.config['BCRYPT_LOG_ROUNDS'] == 4)
-        self.assertTrue(current_app.config['TOKEN_EXPIRATION_DAYS'] == 30)
-        self.assertTrue(current_app.config['TOKEN_EXPIRATION_SECONDS'] == 0)
-
+        self.assertEqual(current_app.config['SQLALCHEMY_DATABASE_URI'], os.environ.get('DATABASE_URL'))
+        self.assertEqual(current_app.config['BCRYPT_LOG_ROUNDS'], 4)
+        self.assertEqual(current_app.config['TOKEN_EXPIRATION_DAYS'], 30)
+        self.assertEqual(current_app.config['TOKEN_EXPIRATION_SECONDS'], 0)
 
 class TestTestingConfig(TestCase):
     def create_app(self):

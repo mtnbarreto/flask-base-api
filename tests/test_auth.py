@@ -22,10 +22,10 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully registered.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully registered.')
             self.assertTrue(data['auth_token'])
-            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 201)
 
     def test_user_registration_duplicate_email(self):
@@ -133,10 +133,10 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully logged in.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully logged in.')
             self.assertTrue(data['auth_token'])
-            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 200)
 
     def test_not_registered_user_login(self):
@@ -150,9 +150,9 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'error')
-            self.assertTrue(data['message'] == 'User does not exist.')
-            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'User does not exist.')
+            self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 404)
 
 
@@ -175,8 +175,8 @@ class TestAuthBlueprint(BaseTestCase):
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully logged out.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully logged out.')
             self.assertEqual(response.status_code, 200)
 
 
@@ -198,9 +198,8 @@ class TestAuthBlueprint(BaseTestCase):
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'error')
-            self.assertTrue(
-                data['message'] == 'Signature expired. Please log in again.')
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Signature expired. Please log in again.')
             self.assertEqual(response.status_code, 401)
 
     def test_invalid_logout(self):
@@ -209,12 +208,9 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/logout',
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'error')
-            self.assertTrue(
-                data['message'] == 'Invalid token. Please log in again.')
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Invalid token. Please log in again.')
             self.assertEqual(response.status_code, 401)
-
-
 
     def test_user_status(self):
         add_user('test', 'test@test.com', 'test')
@@ -232,10 +228,10 @@ class TestAuthBlueprint(BaseTestCase):
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
+            self.assertEqual(data['status'], 'success')
             self.assertTrue(data['data'] is not None)
-            self.assertTrue(data['data']['username'] == 'test')
-            self.assertTrue(data['data']['email'] == 'test@test.com')
+            self.assertEqual(data['data']['username'], 'test')
+            self.assertEqual(data['data']['email'], 'test@test.com')
             self.assertTrue(data['data']['active'] is True)
             self.assertTrue(data['data']['created_at'])
             self.assertEqual(response.status_code, 200)
@@ -247,9 +243,8 @@ class TestAuthBlueprint(BaseTestCase):
                 '/v1/auth/status',
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'error')
-            self.assertTrue(
-                data['message'] == 'Invalid token. Please log in again.')
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Invalid token. Please log in again.')
             self.assertEqual(response.status_code, 401)
 
 
@@ -279,9 +274,8 @@ class TestAuthBlueprint(BaseTestCase):
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'error')
-            self.assertTrue(
-                data['message'] == 'Something went wrong. Please contact us.')
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Something went wrong. Please contact us.')
             self.assertEqual(response.status_code, 401)
 
     def test_password_recovery(self):
@@ -296,8 +290,8 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully sent email with password recovery.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
 
     def test_password_recovery_user_not_registered(self):
@@ -328,8 +322,8 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully sent email with password recovery.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
 
         user = User.query.filter_by(email='test@test.com1').first()
@@ -345,8 +339,8 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully sent email with password recovery.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
 
         user2 = User.query.filter_by(email='test@test.com2').first()
@@ -372,9 +366,120 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json'
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully reseted password.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully reseted password.')
             self.assertEqual(response.status_code, 200)
             #  check db password have really changed
             user_after = User.query.filter_by(id=user.id).first()
             self.assertNotEqual(user_password, user_after.password)
+
+    def test_register_verify_cellphone(self):
+        email = 'test@test.com'
+        user = add_user('justatest1', email, 'password')
+
+        with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password='password'
+                )),
+                content_type='application/json'
+            )
+
+            response = self.client.post(
+                '/v1/auth/cellphone',
+                data=json.dumps(dict(
+                    cellphone_number='99993298',
+                    cellphone_cc='+598'
+                )),
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] },
+                content_type='application/json'
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['message'], 'Successfully sent validation code.')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNotNone(user.cellphone_validation_code)
+            self.assertIsNotNone(user.cellphone_validation_code_expiration)
+            self.assertIsNone(user.cellphone_validation_date)
+
+            response = self.client.put(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    cellphone_validation_code=user.cellphone_validation_code
+                )),
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] },
+                content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successful cellphone validation.')
+            self.assertIsNone(user.cellphone_validation_code)
+            self.assertIsNone(user.cellphone_validation_code_expiration)
+            self.assertIsNotNone(user.cellphone_validation_date)
+
+
+    def test_verify_cellphone_user_already_verified(self):
+        email = 'test@test.com'
+        user = add_user('justatest1', email, 'password')
+
+        with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password='password'
+                )),
+                content_type='application/json'
+            )
+
+            response = self.client.post(
+                '/v1/auth/cellphone',
+                data=json.dumps(dict(
+                    cellphone_number='99993298',
+                    cellphone_cc='+598'
+                )),
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully sent validation code.')
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNotNone(user.cellphone_validation_code)
+            self.assertIsNotNone(user.cellphone_validation_code_expiration)
+            self.assertIsNone(user.cellphone_validation_date)
+
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    cellphone_validation_code=user.cellphone_validation_code
+                )),
+                content_type='application/json',
+                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successful cellphone validation.')
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNone(user.cellphone_validation_code)
+            self.assertIsNone(user.cellphone_validation_code_expiration)
+            self.assertIsNotNone(user.cellphone_validation_date)
+
+        # try to verify again
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/cellphone/verify',
+                data=json.dumps(dict(
+                    cellphone_validation_code=user.cellphone_validation_code
+                )),
+                content_type='application/json',
+                headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('Invalid validation code. Please try again.', data['message'])
+            self.assertIn('error', data['status'])

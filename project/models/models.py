@@ -1,13 +1,14 @@
 # project/models/models.py
 
-
 import jwt
 from enum import IntFlag
 from datetime import datetime, timedelta
 from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
+from project.api.common import exceptions
 from sqlalchemy.ext.associationproxy import association_proxy
+from random import randint
 
 class EventDescriptor(db.Model):
     __tablename__ = "event_descriptors"
@@ -163,7 +164,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(128))
     last_name = db.Column(db.String(128))
-    cell_phone_number = db.Column(db.String(128))
+    cellphone_number = db.Column(db.String(128))
+    cellphone_cc = db.Column(db.String(16))  # cellphone_country_code
     username = db.Column(db.String(128), unique=True, nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
@@ -172,22 +174,30 @@ class User(db.Model):
     token_hash = db.Column(db.String(255), nullable=True)
     fb_id = db.Column(db.String(64), unique=True, nullable=True)  # null if never logged in facebook
     fb_access_token = db.Column(db.String, nullable=True)
+    cellphone_validation_code = db.Column(db.String(4))
+    cellphone_validation_code_expiration = db.Column(db.DateTime, nullable=True)
+    cellphone_validation_date = db.Column(db.DateTime, nullable=True)
     associated_groups = db.relationship("UserGroupAssociation", back_populates="user")
     groups = association_proxy('associated_groups', 'group')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, username, email, password=None, cell_phone_number=None, fb_id=None,
-                 fb_access_token=None, roles=UserRole.USER, created_at=datetime.utcnow()):
+    def __init__(self, username, email, password=None, cellphone_number=None, cellphone_cc=None,
+                 fb_id=None, fb_access_token=None, cellphone_validation_code=None, cellphone_validation_code_expiration=None,
+                 cellphone_validation_date=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
         self.email = email
         if password:
             self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         self.created_at = created_at
         self.updated_at = created_at
-        self.cell_phone_number = cell_phone_number
+        self.cellphone_number = cellphone_number
+        self.cellphone_cc = cellphone_cc
         self.fb_id = fb_id
         self.fb_access_token = fb_access_token
+        self.cellphone_validation_code = cellphone_validation_code
+        self.cellphone_validation_code_expiration = cellphone_validation_code_expiration
+        self.cellphone_validation_date = cellphone_validation_date
         self.roles = roles.value
 
     def encode_auth_token(self):
@@ -258,3 +268,17 @@ class User(db.Model):
             return 'Recovery expired. Please try again.'
         except jwt.InvalidTokenError:
             return 'This recovery seems to be for another user. Please try in again.'
+
+    @staticmethod
+    def generate_cellphone_validation_code():
+        return str(randint(1000, 9999)), datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
+
+    def verify_cellphone_validation_code(self, code):
+        if not self.cellphone_validation_code or self.cellphone_validation_code != code:
+            return False, 'Invalid validation code. Please try again.'
+
+        delta = datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
+        if not self.cellphone_validation_code_expiration or self.cellphone_validation_code_expiration > delta:
+            return False, 'Validation expired. Please try again.'
+
+        return True, None

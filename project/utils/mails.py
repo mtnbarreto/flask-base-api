@@ -1,6 +1,5 @@
 # project/utils/mails.py
 
-from flask_mail import Message
 from flask import render_template, request
 from project.tasks.mail_tasks import send_async_registration_email, send_async_password_recovery_email
 

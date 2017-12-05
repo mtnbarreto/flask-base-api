@@ -9,6 +9,7 @@ from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
 from project.utils.constants import Constants
 from facepy import GraphAPI
+from datetime import datetime
 from project.utils.helpers import session_scope
 
 auth_blueprint = Blueprint('auth', __name__)
@@ -234,3 +235,64 @@ def facebook_login():
             'message': 'Successfully facebook login.',
             'auth_token': auth_token.decode()
         }, 200
+
+
+@auth_blueprint.route('/auth/cellphone', methods=['POST'])
+@authenticate
+def register_user_cellphone(user_id):
+    ''' generates cellphone_validation_code, idempotent (could be used for resend cellphone_validation_code)
+        allows just 1 user per cellphone validation!
+    '''
+    post_data = request.get_json()
+    if not post_data:
+        raise exceptions.InvalidPayload()
+    cellphone_number = post_data.get('cellphone_number')
+    cellphone_cc = post_data.get('cellphone_cc')
+    if not cellphone_number or not cellphone_cc:
+        raise exceptions.InvalidPayload()
+    user = User.get(user_id)
+    if user.cellphone_validation_date and user.cellphone_number == cellphone_number and user.cellphone_cc == cellphone_cc:
+        raise exceptions.BusinessException(message='Registered. You have already registered this cellphone number.')
+
+    cellphone_validation_code, cellphone_validation_code_expiration = User.generate_cellphone_validation_code()
+    with session_scope(db.session) as session:
+        user.cellphone_number = cellphone_number
+        user.cellphone_cc = cellphone_cc
+        user.cellphone_validation_code = cellphone_validation_code
+        user.cellphone_validation_code_expiration = cellphone_validation_code_expiration
+        user.cellphone_validation_date = None
+
+    if not current_app.testing:
+        from project.utils.twilio import send_cellphone_verification_code
+        send_cellphone_verification_code(user, cellphone_validation_code)
+
+    return {
+        'status': 'success',
+        'message': 'Successfully sent validation code.'
+    }, 200
+
+
+@auth_blueprint.route('/auth/cellphone/verify', methods=['PUT'])
+@authenticate
+def verify_user_cellphone(user_id):
+    ''' verifies cellphone_validation_code, idempotent (could be used many times) '''
+    post_data = request.get_json()
+    if not post_data:
+        raise exceptions.InvalidPayload()
+
+    validation_code = post_data.get('cellphone_validation_code')
+    user = User.get(user_id)
+
+    valid_code, message = user.verify_cellphone_validation_code(validation_code)
+    if not valid_code:
+        raise exceptions.BusinessException(message=message)
+
+    with session_scope(db.session) as session:
+        user.cellphone_validation_code = None
+        user.cellphone_validation_code_expiration = None
+        user.cellphone_validation_date = datetime.utcnow()
+
+    return {
+        'status': 'success',
+        'message': 'Successful cellphone validation.'
+    }, 200

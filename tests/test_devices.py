@@ -35,9 +35,9 @@ class TestDevicesBlueprint(BaseTestCase):
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Device successfully registered.')
-            self.assertTrue(response.content_type == 'application/json')
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Device successfully registered.')
+            self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 200)
 
 
@@ -133,7 +133,7 @@ class TestDevicesBlueprint(BaseTestCase):
             )
 
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
+            self.assertEqual(data['status'],'success')
             self.assertTrue(data['message'] == 'Device successfully registered.')
             self.assertTrue(response.content_type == 'application/json')
             self.assertEqual(response.status_code, 200)
@@ -171,8 +171,8 @@ class TestDevicesBlueprint(BaseTestCase):
                           Constants.HttpHeaders.DEVICE_ID: device_id }
             )
             data = json.loads(response.data.decode())
-            self.assertTrue(data['status'] == 'success')
-            self.assertTrue(data['message'] == 'Successfully logged out.')
+            self.assertEqual(data['status'],'success')
+            self.assertEqual(data['message'], 'Successfully logged out.')
             self.assertEqual(response.status_code, 200)
 
             self.assertEqual(len(user.devices), 1)
