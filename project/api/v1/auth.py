@@ -262,7 +262,7 @@ def register_user_cellphone(user_id):
         user.cellphone_validation_code_expiration = cellphone_validation_code_expiration
         user.cellphone_validation_date = None
 
-    if current_app.testing:
+    if not current_app.testing:
         from project.utils.twilio import send_cellphone_verification_code
         send_cellphone_verification_code(user, cellphone_validation_code)
 
