@@ -283,12 +283,11 @@ def verify_user_cellphone(user_id):
     validation_code = post_data.get('cellphone_validation_code')
     user = User.get(user_id)
 
-    valid_code, messagge = user.verify_cellphone_validation_code(validation_code)
+    valid_code, message = user.verify_cellphone_validation_code(validation_code)
     if not valid_code:
-        raise exceptions.BussinessException(messagge=messagge)
+        raise exceptions.BusinessException(message=message)
 
     with session_scope(db.session) as session:
-
         user.cellphone_validation_code = None
         user.cellphone_validation_code_expiration = None
         user.cellphone_validation_date = datetime.utcnow()

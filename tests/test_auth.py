@@ -416,7 +416,10 @@ class TestAuthBlueprint(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successful cellphone validation.')
-            self.assertEqual(user.cellphone_validation_code, None)
+            self.assertIsNone(user.cellphone_validation_code)
+            self.assertIsNone(user.cellphone_validation_code_expiration)
+            self.assertIsNotNone(user.cellphone_validation_date)
+
 
     def test_verify_cellphone_user_already_verified(self):
         email = 'test@test.com'
@@ -447,7 +450,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIsNotNone(user.cellphone_validation_code)
             self.assertIsNotNone(user.cellphone_validation_code_expiration)
-            self.assertIsNotNone(user.cellphone_validation_date)
+            self.assertIsNone(user.cellphone_validation_date)
 
         with self.client:
             response = self.client.put(
@@ -464,7 +467,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(user.cellphone_validation_code)
             self.assertIsNone(user.cellphone_validation_code_expiration)
-            self.assertIsNone(user.cellphone_validation_date)
+            self.assertIsNotNone(user.cellphone_validation_date)
 
         # try to verify again
         with self.client:
@@ -478,6 +481,5 @@ class TestAuthBlueprint(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
-            self.assertIn(
-                'Verified. You have already verified this cellphone number.', data['message'])
+            self.assertIn('Invalid validation code. Please try again.', data['message'])
             self.assertIn('error', data['status'])

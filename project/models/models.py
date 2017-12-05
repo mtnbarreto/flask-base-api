@@ -1,6 +1,5 @@
 # project/models/models.py
 
-
 import jwt
 from enum import IntFlag
 from datetime import datetime, timedelta
