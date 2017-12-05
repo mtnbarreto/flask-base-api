@@ -271,7 +271,7 @@ class User(db.Model):
             return 'This recovery seems to be for another user. Please try in again.'
 
     @staticmethod
-    def generate_cellphone_validation_code(self):
+    def generate_cellphone_validation_code():
         return str(randint(1000, 9999)), datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
 
     def verify_cellphone_validation_code(self, code):

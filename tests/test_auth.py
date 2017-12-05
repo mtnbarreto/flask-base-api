@@ -383,9 +383,6 @@ class TestAuthBlueprint(BaseTestCase):
         email = 'test@test.com'
         user = add_user('justatest1', email, 'password')
 
-
-
-
         with self.client:
                         # user login
             resp_login = self.client.post(
@@ -398,9 +395,8 @@ class TestAuthBlueprint(BaseTestCase):
             )
 
             response = self.client.post(
-                '/v1/auth/cellphone/register',
+                '/v1/auth/cellphone',
                 data=json.dumps(dict(
-                    email=email,
                     cellphone_number='99993298',
                     cellphone_cc='+598'
                 )),
@@ -412,10 +408,9 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertNotEqual(user.cellphone_validation_code, None)
 
-            response = self.client.post(
+            response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    email=email,
                     cellphone_validation_code=user.cellphone_validation_code
                 )),
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
@@ -441,9 +436,8 @@ class TestAuthBlueprint(BaseTestCase):
             )
 
             response = self.client.post(
-                '/v1/auth/cellphone/register',
+                '/v1/auth/cellphone',
                 data=json.dumps(dict(
-                    email=email,
                     cellphone_number='99993298',
                     cellphone_cc='+598'
                 )),
@@ -454,13 +448,14 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertTrue(data['status'] == 'success')
             self.assertTrue(data['message'] == 'Successfully sent validation code.')
             self.assertEqual(response.status_code, 200)
-            self.assertNotEqual(user.cellphone_validation_code, None)
+            self.assertIsNotNone(user.cellphone_validation_code)
+            self.assertIsNotNone(user.cellphone_validation_code_expiration)
+            self.assertIsNotNone(user.cellphone_validation_date)
 
         with self.client:
-            response = self.client.post(
+            response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    email=email,
                     cellphone_validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
@@ -470,16 +465,16 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertTrue(data['status'] == 'success')
             self.assertTrue(data['message'] == 'Successful cellphone validation.')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(user.cellphone_validation_code, None)
+            self.assertIsNone(user.cellphone_validation_code)
+            self.assertIsNone(user.cellphone_validation_code_expiration)
+            self.assertIsNone(user.cellphone_validation_date)
 
         # try to verify again
         with self.client:
-            response = self.client.post(
+            response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    email=email,
-                    cellphone_number='99993298',
-                    cellphone_cc='+598'
+                    cellphone_validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
                 headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }

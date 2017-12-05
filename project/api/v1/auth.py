@@ -9,6 +9,7 @@ from project.api.common.utils import authenticate, privileges
 from project.models.models import User, Device, UserRole
 from project.utils.constants import Constants
 from facepy import GraphAPI
+from datetime import datetime
 from project.utils.helpers import session_scope
 
 auth_blueprint = Blueprint('auth', __name__)
@@ -254,7 +255,7 @@ def register_user_cellphone(logged_user_id):
     # check for existing user
     user = User.get(logged_user_id)
 
-    if user.cellphone_verified and user.cellphone_number == cellphone_number and user.cellphone_cc == cellphone_cc:
+    if user.cellphone_validation_date and user.cellphone_number == cellphone_number and user.cellphone_cc == cellphone_cc:
         raise exceptions.BusinessException(message='Registered. You have already registered this cellphone number.')
 
     # user exists
@@ -263,9 +264,11 @@ def register_user_cellphone(logged_user_id):
 
     validation_code, validation_code_expiration = User.generate_cellphone_validation_code()
     with session_scope(db.session) as session:
+        import pdb
+        pdb.setTrace()
         user.validation_code = validation_code
         user.validation_code_expiration = validation_code_expiration
-        user.cellphone_verified = False
+        user.cellphone_validation_date = None
 
     if current_app.testing:
         from project.utils.twilio import send_cellphone_verification_code
@@ -296,9 +299,9 @@ def verify_user_cellphone(logged_user_id):
 
         user.cellphone_validation_code = None
         user.cellphone_validation_code_expiration = None
-        user.cellphone_validation_date = utc.now()
+        user.cellphone_validation_date = datetime.utcnow()
 
-    return response_object = {
+    return {
         'status': 'success',
         'message': 'Successful cellphone validation.'
     }, 200
