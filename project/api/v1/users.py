@@ -13,7 +13,6 @@ from project.api.common.utils.exceptions import NotFoundException, BusinessExcep
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
 
 @users_blueprint.route('/ping', methods=['GET'])
-@accept('application/json')
 def ping_pong():
     return {
         'status': 'success',
