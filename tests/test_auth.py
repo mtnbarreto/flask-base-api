@@ -322,12 +322,13 @@ class TestAuthBlueprint(BaseTestCase):
                     token=token,
                     password='password2'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
             self.assertEqual(data['message'], 'Password recovery token expired. Please try again.')
-            self.assertEqual(response.status_code, 401)
+            self.assertEqual(response.status_code, 400)
             #  check db password has not changed
             self.assertEqual(user_password_before, user.password)
 
@@ -345,7 +346,8 @@ class TestAuthBlueprint(BaseTestCase):
                     token=token,
                     password='password2'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -361,7 +363,8 @@ class TestAuthBlueprint(BaseTestCase):
                     token=token,
                     password='password3'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')

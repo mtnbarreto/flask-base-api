@@ -177,14 +177,12 @@ def password_reset():
         raise InvalidPayload()
 
     # fetch the user data
-    try:
-        user_id = User.decode_password_token(token)
-        user = User.get(user_id)
-        if not user.token_hash:
-            raise NotFoundException(message='Invalid reset. Please try again.')
-        bcrypt.check_password_hash(user.token_hash, token)
-    except Exception as e:
-        raise e
+
+    user_id = User.decode_password_token(token)
+    user = User.get(user_id)
+    if not user or not user.token_hash:
+        raise NotFoundException(message='Invalid reset. Please try again.')
+    bcrypt.check_password_hash(user.token_hash, token)
 
     if user:
         with session_scope(db.session):

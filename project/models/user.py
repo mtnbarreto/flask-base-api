@@ -122,9 +122,9 @@ class User(db.Model):
             payload = jwt.decode(pass_token, current_app.config.get('SECRET_KEY'))
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            raise UnauthorizedException(message='Password recovery token expired. Please try again.')
+            raise BusinessException(message='Password recovery token expired. Please try again.')
         except jwt.InvalidTokenError:
-            raise UnauthorizedException(message='Invalid password recovery token. Please try again.')
+            raise BusinessException(message='Invalid password recovery token. Please try again.')
 
     @staticmethod
     def generate_cellphone_validation_code() -> Tuple[str, datetime]:
