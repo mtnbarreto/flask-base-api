@@ -2,6 +2,8 @@
 
 from flask import Blueprint, request, current_app
 from sqlalchemy import  or_
+from facepy import GraphAPI
+from flask_accept import accept
 
 from project import bcrypt, db
 from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnauthorizedException
@@ -9,13 +11,15 @@ from project.api.common.utils.decorators import authenticate, privileges
 from project.models.user import User, UserRole
 from project.models.device import  Device
 from project.api.common.utils.constants import Constants
-from facepy import GraphAPI
 from project.api.common.utils.helpers import session_scope
+
+
 
 auth_blueprint = Blueprint('auth', __name__)
 
 
 @auth_blueprint.route('/auth/register', methods=['POST'])
+@accept('application/json')
 def register_user():
     # get post data
     post_data = request.get_json()
@@ -62,6 +66,7 @@ def register_user():
 
 
 @auth_blueprint.route('/auth/login', methods=['POST'])
+@accept('application/json')
 def login_user():
     # get post data
     post_data = request.get_json()
@@ -98,6 +103,7 @@ def login_user():
 
 
 @auth_blueprint.route('/auth/logout', methods=['GET'])
+@accept('application/json')
 @authenticate
 @privileges(roles=UserRole.USER | UserRole.USER_ADMIN | UserRole.BACKEND_ADMIN)
 def logout_user(_):
@@ -114,6 +120,7 @@ def logout_user(_):
 
 
 @auth_blueprint.route('/auth/status', methods=['GET'])
+@accept('application/json')
 @authenticate
 def get_user_status(user_id: int):
     user = User.get(user_id)
@@ -130,6 +137,7 @@ def get_user_status(user_id: int):
 
 
 @auth_blueprint.route('/auth/password_recovery', methods=['POST'])
+@accept('application/json')
 def password_recovery():
     ''' creates a password_recovery_hash and sends email to user (assumes login=email)'''
     post_data = request.get_json()
@@ -157,6 +165,7 @@ def password_recovery():
 
 
 @auth_blueprint.route('/auth/password', methods=['POST'])
+@accept('application/json')
 def password_reset():
     ''' reset user password (assumes login=email)'''
     post_data = request.get_json()
@@ -182,6 +191,7 @@ def password_reset():
 
 
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
+@accept('application/json')
 def facebook_login():
     ''' logs in user using fb_access_token returning the corresponding JWT
         if user does not exist registers/creates a new one'''

@@ -2,6 +2,7 @@
 
 from flask import Blueprint, request
 from sqlalchemy import exc, or_
+from flask_accept import accept
 
 from project.models.user import User, UserRole
 from project import db
@@ -12,6 +13,7 @@ from project.api.common.utils.exceptions import NotFoundException, BusinessExcep
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
 
 @users_blueprint.route('/ping', methods=['GET'])
+@accept('application/json')
 def ping_pong():
     return {
         'status': 'success',
@@ -19,6 +21,7 @@ def ping_pong():
     }
 
 @users_blueprint.route('/push_echo', methods=['POST'])
+@accept('application/json')
 @authenticate
 def push_echo(user_id: int):
     from project.api.common.utils.push_notification import send_notification_to_user
@@ -44,6 +47,7 @@ def push_echo(user_id: int):
     # send_notifications_for_event(event=event)
 
 @users_blueprint.route('/users', methods=['POST'])
+@accept('application/json')
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
 def add_user(_):
@@ -72,6 +76,7 @@ def add_user(_):
         raise InvalidPayload()
 
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
+@accept('application/json')
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
 def get_single_user(_, user_id):
@@ -93,6 +98,7 @@ def get_single_user(_, user_id):
 
 
 @users_blueprint.route('/users', methods=['GET'])
+@accept('application/json')
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
 def get_all_users(_):

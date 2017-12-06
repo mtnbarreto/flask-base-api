@@ -19,7 +19,8 @@ class TestDevicesBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             device_id = uuid.uuid4().hex
             pn_token = uuid.uuid4().hex
@@ -31,8 +32,7 @@ class TestDevicesBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers={
-                    Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token']}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -59,7 +59,7 @@ class TestDevicesBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
-                headers={Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple"}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.DEVICE_ID, device_id), (Constants.HttpHeaders.DEVICE_TYPE, "apple")]
             )
             self.assertEqual(len(user1.devices), 1)
 
@@ -70,7 +70,7 @@ class TestDevicesBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
-                headers={Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple"}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.DEVICE_ID, device_id), (Constants.HttpHeaders.DEVICE_TYPE, "apple")]
             )
 
             self.assertEqual(len(user1.devices), 0)
@@ -93,7 +93,8 @@ class TestDevicesBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             resp2_login = self.client.post(
                 '/v1/auth/login',
@@ -101,7 +102,8 @@ class TestDevicesBlueprint(BaseTestCase):
                     email='test2@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
 
             pn_token = uuid.uuid4().hex
@@ -113,8 +115,7 @@ class TestDevicesBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers={
-                    Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token']}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             response = self.client.put(
                 f'/v1/devices/{device_id}',
@@ -124,8 +125,7 @@ class TestDevicesBlueprint(BaseTestCase):
                     pn_token=pn_token
                 )),
                 content_type='application/json',
-                headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp2_login.data.decode())[
-                    'auth_token']}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp2_login.data.decode())['auth_token'])]
             )
 
             data = json.loads(response.data.decode())
@@ -156,13 +156,14 @@ class TestDevicesBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
-                headers={Constants.HttpHeaders.DEVICE_ID: device_id, Constants.HttpHeaders.DEVICE_TYPE: "apple"}
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.DEVICE_ID, device_id), (Constants.HttpHeaders.DEVICE_TYPE, "apple")]
             )
             self.assertEqual(len(user.devices), 1)
             # valid token logout
             response = self.client.get(
                 '/v1/auth/logout',
                 headers={
+                    'Accept': 'application/json',
                     Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'],
                     Constants.HttpHeaders.DEVICE_ID: device_id}
             )

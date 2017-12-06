@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from flask import Blueprint, request, current_app
+from flask_accept import accept
 
 from project import db
 from project.api.common.utils import exceptions
@@ -12,6 +13,7 @@ from project.api.common.utils.helpers import session_scope
 phone_validation_blueprint = Blueprint('phone_validation', __name__)
 
 @phone_validation_blueprint.route('/auth/cellphone', methods=['POST'])
+@accept('application/json')
 @authenticate
 def register_user_cellphone(user_id: int):
     ''' generates cellphone_validation_code, idempotent (could be used for resend cellphone_validation_code)
@@ -47,6 +49,7 @@ def register_user_cellphone(user_id: int):
 
 
 @phone_validation_blueprint.route('/auth/cellphone/verify', methods=['PUT'])
+@accept('application/json')
 @authenticate
 def verify_user_cellphone(user_id: int):
     ''' verifies cellphone_validation_code, idempotent (could be used many times) '''

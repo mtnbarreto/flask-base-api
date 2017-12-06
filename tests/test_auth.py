@@ -18,7 +18,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='123456'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -38,6 +39,7 @@ class TestAuthBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -56,6 +58,7 @@ class TestAuthBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -68,7 +71,8 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict()),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -82,6 +86,7 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(email='test@test.com',
                                   password='test')),
                 content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -96,6 +101,7 @@ class TestAuthBlueprint(BaseTestCase):
                                     username='justatest',
                                     password='test')),
                 content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -111,6 +117,7 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com'
                 )),
                 content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -129,7 +136,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers = [('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -146,7 +154,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
@@ -166,12 +175,13 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             # valid token logout
             response = self.client.get(
                 '/v1/auth/logout',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -188,13 +198,14 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             # invalid token logout
             time.sleep(4)
             response = self.client.get(
                 '/v1/auth/logout',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
@@ -205,7 +216,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             response = self.client.get(
                 '/v1/auth/logout',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer invalid')])
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
             self.assertEqual(data['message'], 'Invalid token. Please log in again.')
@@ -220,11 +231,12 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             response = self.client.get(
                 '/v1/auth/status',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -240,7 +252,8 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             response = self.client.get(
                 '/v1/auth/status',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer invalid' })
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer invalid')]
+            )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
             self.assertEqual(data['message'], 'Invalid token. Please log in again.')
@@ -260,7 +273,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             response = self.client.post(
                 '/v1/users',
@@ -270,7 +284,7 @@ class TestAuthBlueprint(BaseTestCase):
                     password='test'
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
@@ -286,7 +300,8 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     email='test@test.com3'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -301,7 +316,8 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     email='not_exists@test.com'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
@@ -318,7 +334,8 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     email='test@test.com1'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -335,7 +352,8 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     email='test@test.com2'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -362,7 +380,8 @@ class TestAuthBlueprint(BaseTestCase):
                     token=token,
                     password='password2'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -383,7 +402,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email=email,
                     password='password'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
 
             response = self.client.post(
@@ -392,8 +412,8 @@ class TestAuthBlueprint(BaseTestCase):
                     cellphone_number='99993298',
                     cellphone_cc='+598'
                 )),
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] },
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['message'], 'Successfully sent validation code.')
@@ -408,8 +428,8 @@ class TestAuthBlueprint(BaseTestCase):
                 data=json.dumps(dict(
                     validation_code=user.cellphone_validation_code
                 )),
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] },
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode())
@@ -431,7 +451,8 @@ class TestAuthBlueprint(BaseTestCase):
                     email=email,
                     password='password'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
 
             response = self.client.post(
@@ -441,7 +462,7 @@ class TestAuthBlueprint(BaseTestCase):
                     cellphone_cc='+598'
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -458,7 +479,7 @@ class TestAuthBlueprint(BaseTestCase):
                     validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
@@ -476,7 +497,7 @@ class TestAuthBlueprint(BaseTestCase):
                     validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
-                headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)

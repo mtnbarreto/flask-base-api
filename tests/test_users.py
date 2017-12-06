@@ -9,12 +9,14 @@ from project.models.user import UserRole
 from tests.utils import add_user
 
 
+
 class TestUsersBlueprint(BaseTestCase):
     """Tests for the Users Service."""
 
+
     def test_users(self):
         """Ensure the /ping route behaves correctly."""
-        response = self.client.get('/v1/ping')
+        response = self.client.get('/v1/ping', headers=[('Accept', 'application/json')])
         data = json.loads(response.data.decode())
         self.assertEqual(response.status_code, 200)
         self.assertIn('pong!', data['message'])
@@ -31,7 +33,8 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             response = self.client.post(
                 '/v1/users',
@@ -41,10 +44,10 @@ class TestUsersBlueprint(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
-            data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 201)
+            data = json.loads(response.data.decode())
             self.assertIn('michael@realpython.com was added!', data['message'])
             self.assertIn('success', data['status'])
 
@@ -60,13 +63,14 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict()),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -83,13 +87,14 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(email='michael@realpython.com', password='password')),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -106,7 +111,8 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
             self.client.post(
                 '/v1/users',
@@ -116,7 +122,7 @@ class TestUsersBlueprint(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             response = self.client.post(
                 '/v1/users',
@@ -126,7 +132,7 @@ class TestUsersBlueprint(BaseTestCase):
                     password='password'
                 )),
                 content_type='application/json',
-                headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 400)
@@ -147,9 +153,10 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
-            response = self.client.get(f'/v1/users/{user.id}', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
+            response = self.client.get(f'/v1/users/{user.id}', headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])])
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertTrue('created_at' in data['data'])
@@ -168,9 +175,10 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
-            response = self.client.get('/v1/users/blah', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
+            response = self.client.get('/v1/users/blah', headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])])
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist.', data['message'])
@@ -186,9 +194,10 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
-            response = self.client.get('/v1/users/999', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
+            response = self.client.get('/v1/users/999', headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])])
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 404)
             self.assertIn('User does not exist.', data['message'])
@@ -209,9 +218,10 @@ class TestUsersBlueprint(BaseTestCase):
                     email='test@test.com',
                     password='test'
                 )),
-                content_type='application/json'
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
             )
-            response = self.client.get('/v1/users', headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] })
+            response = self.client.get('/v1/users', headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])])
             data = json.loads(response.data.decode())
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(data['data']['users']), 3)
