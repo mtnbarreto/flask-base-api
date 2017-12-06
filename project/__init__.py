@@ -1,7 +1,7 @@
 # project/__init__.py
 import os
 
-from flask import Flask, Config
+from flask import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
@@ -45,9 +45,11 @@ def create_app():
     from project.api.v1.auth import auth_blueprint
     from project.api.v1.users import users_blueprint
     from project.api.v1.devices import devices_blueprint
+    from project.api.v1.phone_validation import phone_validation_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/v1')
     app.register_blueprint(users_blueprint, url_prefix='/v1')
     app.register_blueprint(devices_blueprint, url_prefix='/v1')
+    app.register_blueprint(phone_validation_blueprint, url_prefix='/v1')
 
     # register error handlers
     from project.api.common.utils import exceptions
@@ -61,6 +63,8 @@ def create_app():
     app.register_error_handler(Exception, error_handlers.handle_general_exception)
     return app
 
+
+# noinspection PyPropertyAccess
 def make_celery(app):
     app = app or create_app()
     celery = Celery(__name__, broker=app.config['CELERY_BROKER_URL'], include=['project.tasks.mail_tasks', 'project.tasks.push_notification_tasks',

@@ -1,9 +1,11 @@
-# project/api/devices.py
+# project/api/v1/devices.py
 
-from flask import Flask, Blueprint, jsonify, request
-from project.api.common.utils import exceptions
-from project.models.models import Device, User
+from flask import Blueprint, request
+from project.api.common.utils.exceptions import InvalidPayload
+from project.models.device import Device
+from project.models.user import User
 from project.api.common.utils.decorators import authenticate
+from project.api.common.utils.helpers import session_scope
 from project import db
 
 devices_blueprint = Blueprint('devices', __name__, template_folder='../templates/devices')
@@ -13,43 +15,34 @@ devices_blueprint = Blueprint('devices', __name__, template_folder='../templates
 def register_device():
     post_data = request.get_json()
     if not post_data:
-        return exceptions.InvalidPayload()
-    device_id   = post_data.get('device_id')
+        raise InvalidPayload()
+    device_id = post_data.get('device_id')
     device_type = post_data.get('device_type')
     if not device_id or not device_type:
-        return exceptions.InvalidPayload()
-    pn_token    = post_data.get('pn_token')
-    try:
-        device = Device.create_or_update(device_id=device_id, device_type=device_type, pn_token=pn_token)
-        db.session.commit()
-        response_object = {
-            'status': 'success',
-            'message': 'Device successfully registered.'
-        }
-        return response_object, 200
-    except (exc.IntegrityError, ValueError) as e:
-        db.session.rollback()
-        raise exceprions.InvalidPayload()
+        raise InvalidPayload()
+    pn_token = post_data.get('pn_token')
+    with session_scope(db.session):
+        Device.create_or_update(device_id=device_id, device_type=device_type, pn_token=pn_token)
+    return {
+        'status': 'success',
+        'message': 'Device successfully registered.'
+    }
+
 
 @devices_blueprint.route('/devices/<device_id>', methods=['PUT'])
 @authenticate
-def connect_device_with_logged_in_user(logged_in_user_id, device_id):
-    logged_in_user = User.get(logged_in_user_id)
+def connect_device_with_logged_in_user(user_id: int, device_id: str):
+    user = User.get(user_id)
     post_data = request.get_json()
     if not post_data:
-        return exceptions.InvalidPayload()
+        raise InvalidPayload()
     device_type = post_data.get('device_type')
     if not device_type:
-        return exceptions.InvalidPayload()
+        raise InvalidPayload()
     pn_token = post_data.get('pn_token')
-    try:
-        device = Device.create_or_update(device_id=device_id, device_type=device_type, user=logged_in_user, pn_token=pn_token)
-        db.session.commit()
-        response_object = {
-            'status': 'success',
-            'message': 'Device successfully registered.'
-        }
-        return response_object, 200
-    except (exc.IntegrityError, ValueError) as e:
-        db.session.rollback()
-        raise exceprions.InvalidPayload()
+    with session_scope(db.session):
+        Device.create_or_update(device_id=device_id, device_type=device_type, user=user, pn_token=pn_token)
+    return {
+        'status': 'success',
+        'message': 'Device successfully registered.'
+    }

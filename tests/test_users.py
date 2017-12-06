@@ -2,12 +2,10 @@
 
 import json
 import datetime
-import uuid
 
-from project import db
 from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
-from project.models.models import User, UserRole
+from project.models.user import UserRole
 from tests.utils import add_user
 
 

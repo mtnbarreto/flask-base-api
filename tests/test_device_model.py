@@ -3,9 +3,9 @@
 from sqlalchemy.exc import IntegrityError
 
 from project import db
-from project.models.models import Device
+from project.models.device import Device
 from tests.base import BaseTestCase
-from tests.utils import add_user, add_device
+from tests.utils import add_device
 
 
 class TestDeviceModel(BaseTestCase):
