@@ -184,17 +184,13 @@ def password_reset():
         raise NotFoundException(message='Invalid reset. Please try again.')
     bcrypt.check_password_hash(user.token_hash, token)
 
-    if user:
-        with session_scope(db.session):
-            user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
-            user.token_hash = None
-        return {
-            'status': 'success',
-            'message': 'Successfully reset password.',
-        }
-    else:
-        raise NotFoundException(message='Invalid reset. Please try again')
-
+    with session_scope(db.session):
+        user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        user.token_hash = None
+    return {
+        'status': 'success',
+        'message': 'Successfully reset password.',
+    }
 
 
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
