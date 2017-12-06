@@ -1,4 +1,4 @@
-# project/api/views.py
+# project/api/v1/users.py
 
 from flask import Blueprint, request
 from sqlalchemy import exc, or_
@@ -96,18 +96,15 @@ def get_single_user(_, user_id):
 @users_blueprint.route('/users', methods=['GET'])
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
-def get_all_users(*unused):
+def get_all_users(_):
     """Get all users"""
     users = User.query.order_by(User.created_at.desc()).all()
-    users_list = []
-    for user in users:
-        user_object = {
+    users_list = [{
             'id': user.id,
             'username': user.username,
             'email': user.email,
             'created_at': user.created_at
-        }
-        users_list.append(user_object)
+        } for user in users]
     return {
         'status': 'success',
         'data': {

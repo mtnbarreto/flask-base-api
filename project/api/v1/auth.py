@@ -114,7 +114,7 @@ def logout_user(_):
 
 @auth_blueprint.route('/auth/status', methods=['GET'])
 @authenticate
-def get_user_status(user_id):
+def get_user_status(user_id: int):
     user = User.get(user_id)
     return {
         'status': 'success',

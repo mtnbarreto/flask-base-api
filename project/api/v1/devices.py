@@ -29,7 +29,7 @@ def register_device():
 
 @devices_blueprint.route('/devices/<device_id>', methods=['PUT'])
 @authenticate
-def connect_device_with_logged_in_user(user_id, device_id):
+def connect_device_with_logged_in_user(user_id: int, device_id: str):
     user = User.get(user_id)
     post_data = request.get_json()
     if not post_data:

@@ -85,7 +85,7 @@ class Device(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, device_id, device_type, pn_token=None, active=True, user=None, created_at=datetime.utcnow()):
+    def __init__(self, device_id: str, device_type: str, pn_token: str=None, active: bool=True, user=None, created_at: datetime=datetime.utcnow()):
         self.device_id = device_id
         self.device_type = device_type  # "apple" "android"
         self.pn_token = pn_token
