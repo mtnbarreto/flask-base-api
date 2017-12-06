@@ -4,7 +4,7 @@ from flask import Blueprint, request, current_app
 from sqlalchemy import  or_
 
 from project import bcrypt, db
-from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnautorizedException
+from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnauthorizedException
 from project.api.common.utils.decorators import authenticate, privileges
 from project.models.user import User, UserRole
 from project.models.device import  Device
@@ -196,7 +196,7 @@ def facebook_login():
         graph = GraphAPI(fb_access_token)
         profile = graph.get("me?fields=id,name,email,link")
     except Exception:
-        raise UnautorizedException()
+        raise UnauthorizedException()
 
     fb_user = User.first(User.fb_id == profile['id'])
     if not fb_user:

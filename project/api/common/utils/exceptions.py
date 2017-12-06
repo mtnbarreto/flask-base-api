@@ -25,7 +25,7 @@ class BusinessException(APIException):
     def __init__(self, message='Business rule constraint not satified.', payload=None):
         super().__init__(message=message, status_code=400, payload=payload)
 
-class UnautorizedException(APIException):
+class UnauthorizedException(APIException):
 
     def __init__(self, message='Not authorized.', payload=None):
         super().__init__(message=message, status_code=401, payload=payload)

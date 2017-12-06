@@ -16,7 +16,7 @@ from project.api.common.base_definitions import BaseFlask
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
 conf.from_object(os.getenv('APP_SETTINGS'))
 
-# instantiate the extesnions
+# instantiate the extensions
 db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
@@ -56,7 +56,7 @@ def create_app():
     from project.api.common import error_handlers
     app.register_error_handler(exceptions.InvalidPayload, error_handlers.handle_exception)
     app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)
-    app.register_error_handler(exceptions.UnautorizedException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.UnauthorizedException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)

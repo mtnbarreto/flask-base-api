@@ -8,7 +8,7 @@ from project import db, bcrypt
 from sqlalchemy.ext.associationproxy import association_proxy
 from random import randint
 from typing import Tuple, Optional
-from project.api.common.utils.exceptions import UnautorizedException, BusinessException
+from project.api.common.utils.exceptions import UnauthorizedException, BusinessException
 
 class UserRole(IntFlag):
     USER = 1
@@ -96,9 +96,9 @@ class User(db.Model):
             payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            raise UnautorizedException(message='Signature expired. Please log in again.')
+            raise UnauthorizedException(message='Signature expired. Please log in again.')
         except jwt.InvalidTokenError:
-            raise UnautorizedException(message='Invalid token. Please log in again.')
+            raise UnauthorizedException(message='Invalid token. Please log in again.')
 
     def encode_password_token(self) -> str:
         """Generates the auth token"""

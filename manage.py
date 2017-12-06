@@ -63,8 +63,8 @@ def recreate_db():
 @manager.command
 def seed_db():
     """Seeds the database."""
-    eventDesc = EventDescriptor(id=1, name="Seed Events Name", description="Seed db Event from {1}")
-    db.session.add(eventDesc)
+    event_desc = EventDescriptor(id=1, name="Seed Events Name", description="Seed db Event from {1}")
+    db.session.add(event_desc)
     group = Group(name="Group Name")
     db.session.add(group)
     user1 = User(username='martin', email="mtn.barreto@gmail.com", password="password", cellphone_number="98983510", cellphone_cc="+598")
@@ -85,7 +85,7 @@ def seed_db():
 @manager.command
 def cov():
     """Runs the unit tests with coverage."""
-    tests = unittest.TestLoader().discover('project/tests')
+    tests = unittest.TestLoader().discover('tests')
     result = unittest.TextTestRunner(verbosity=2).run(tests)
     if result.wasSuccessful():
         COV.stop()
