@@ -27,11 +27,9 @@ def authenticate(f):
         if not auth_header:
             raise exceptions.UnautorizedException() # 'Provide a valid auth token.' 403
         auth_token = auth_header.split(" ")[1]
-        resp = User.decode_auth_token(auth_token)
-        if isinstance(resp, str):
-            raise exceptions.UnautorizedException(message=resp)
-        user = User.get(resp)
+        user_id = User.decode_auth_token(auth_token)
+        user = User.get(user_id)
         if not user or not user.active:
             raise exceptions.UnautorizedException(message='Something went wrong. Please contact us.')
-        return f(resp, *args, **kwargs)
+        return f(user_id, *args, **kwargs)
     return decorated_function

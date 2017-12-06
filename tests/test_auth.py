@@ -1,6 +1,5 @@
 import json
 import time
-import uuid
 
 from project import db
 from project.models.models import User
@@ -351,7 +350,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_password_reset(self):
         user = add_user('justatest3', 'test@test.com3', 'password')
-        token = user.encode_password_token(user.id).decode()
+        token = user.encode_password_token().decode()
 
         user = set_user_token_hash(user, token)
         user_password = user.password
@@ -367,7 +366,7 @@ class TestAuthBlueprint(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
-            self.assertEqual(data['message'], 'Successfully reseted password.')
+            self.assertEqual(data['message'], 'Successfully reset password.')
             self.assertEqual(response.status_code, 200)
             #  check db password have really changed
             user_after = User.query.filter_by(id=user.id).first()
@@ -407,7 +406,7 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    cellphone_validation_code=user.cellphone_validation_code
+                    validation_code=user.cellphone_validation_code
                 )),
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] },
                 content_type='application/json'
@@ -456,7 +455,7 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    cellphone_validation_code=user.cellphone_validation_code
+                    validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
                 headers={ Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }
@@ -474,7 +473,7 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.put(
                 '/v1/auth/cellphone/verify',
                 data=json.dumps(dict(
-                    cellphone_validation_code=user.cellphone_validation_code
+                    validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
                 headers={Constants.HttpHeaders.AUTHORIZATION: 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'] }

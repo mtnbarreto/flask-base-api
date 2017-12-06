@@ -2,6 +2,7 @@
 from flask_mail import Message
 from project import celery, mail
 
+
 @celery.task
 def send_async_registration_email(subject, recipient, text_body, html_body):
     msg = Message(subject=subject, recipients=[recipient])

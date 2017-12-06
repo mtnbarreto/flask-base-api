@@ -1,6 +1,5 @@
 # project/tests/test_event_model.py
 
-from sqlalchemy.exc import IntegrityError
 from project import db
 from project.models.models import Event, EventDescriptor
 from tests.base import BaseTestCase

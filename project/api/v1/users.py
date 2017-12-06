@@ -1,12 +1,11 @@
 # project/api/views.py
 
-from flask import Flask, Blueprint, jsonify, request, render_template
-
-from project.models.models import User, UserRole, Group
-from project import db
+from flask import Blueprint, request
 from sqlalchemy import exc, or_
-from project.api.common.utils.decorators import authenticate, privileges
 
+from project.models.models import User, UserRole
+from project import db
+from project.api.common.utils.decorators import authenticate, privileges
 from project.api.common.utils import exceptions
 
 
@@ -14,27 +13,27 @@ users_blueprint = Blueprint('users', __name__, template_folder='../templates/use
 
 @users_blueprint.route('/ping', methods=['GET'])
 def ping_pong():
-    return jsonify({
+    return {
         'status': 'success',
         'message': 'pong!'
-    })
+    }
 
 @users_blueprint.route('/push_echo', methods=['POST'])
 @authenticate
-def push_echo(logged_in_user):
+def push_echo(user_id: int):
     from project.api.common.utils.push_notification import send_notification_to_user
-    creator = User.get(logged_in_user)
-    send_notification_to_user(user=creator, message_title="Auto Message", message_body="😄😄😄😄😄")(event)
-    return jsonify({
+    creator = User.get(user_id)
+    send_notification_to_user(user=creator, message_title="Auto Message", message_body="😄😄😄😄😄")
+    return {
         'status': 'success',
         'message': 'pong!'
-    })
+    }
     # from project.api.common.utils.push_notification import send_notifications_for_event
     # from project.models.models import Event
     # from project.api.common.utils.constants import Constants
     # we can also send a notification to a group
     # event = Event(event_descriptor_id=Constants.EventDescriptorIds.SEED_EVENT_ID)
-    # creator = User.get(logged_in_user)
+    # creator = User.get(user_id)
     # event.creator = creator
     # event.group = Group.get(1)
     # event.entity_id = creator.id
@@ -47,7 +46,7 @@ def push_echo(logged_in_user):
 @users_blueprint.route('/users', methods=['POST'])
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
-def add_user(logged_in_user):
+def add_user(_):
     post_data = request.get_json()
     if not post_data:
         raise exceptions.InvalidPayload()
@@ -75,14 +74,14 @@ def add_user(logged_in_user):
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
 @authenticate
 @privileges(roles=UserRole.BACKEND_ADMIN)
-def get_single_user(logged_in_user, user_id):
+def get_single_user(_, user_id):
     """Get single user details"""
     try:
-        user = User.get(id=int(user_id))
+        user = User.get(int(user_id))
         if not user:
             raise exceptions.NotFoundException(message='User does not exist.')
         else:
-            response_object = {
+            return {
                 'status': 'success',
                 'data': {
                   'username': user.username,
@@ -90,7 +89,6 @@ def get_single_user(logged_in_user, user_id):
                   'created_at': user.created_at
                 }
             }
-            return response_object, 200
     except ValueError:
         raise exceptions.NotFoundException(message='User does not exist.')
 
@@ -110,10 +108,9 @@ def get_all_users(*unused):
             'created_at': user.created_at
         }
         users_list.append(user_object)
-    response_object = {
+    return {
         'status': 'success',
         'data': {
             'users': users_list
         }
     }
-    return response_object, 200

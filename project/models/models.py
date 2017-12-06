@@ -3,12 +3,13 @@
 import jwt
 from enum import IntFlag
 from datetime import datetime, timedelta
-from sqlalchemy import exc, or_
 from flask import current_app
 from project import db, bcrypt
-from project.api.common.utils import exceptions
 from sqlalchemy.ext.associationproxy import association_proxy
 from random import randint
+from typing import Tuple, Optional
+from project.api.common.utils.exceptions import UnautorizedException, BusinessException
+
 
 class EventDescriptor(db.Model):
     __tablename__ = "event_descriptors"
@@ -32,15 +33,15 @@ class Event(db.Model):
     event_descriptor = db.relationship('EventDescriptor', backref=db.backref('events', lazy='joined'))
 
     entity_type = db.Column(db.String(128))
-    entity_id =  db.Column(db.Integer)
+    entity_id = db.Column(db.Integer)
     entity_description = db.Column(db.String(128))
     entity_2_type = db.Column(db.String(128))
-    entity_2_id =  db.Column(db.Integer)
+    entity_2_id = db.Column(db.Integer)
     entity_2_description = db.Column(db.String(128))
     entity_3_type = db.Column(db.String(128))
-    entity_3_id =  db.Column(db.Integer)
+    entity_3_id = db.Column(db.Integer)
     entity_3_description = db.Column(db.String(128))
-    expiration_date =  db.Column(db.DateTime)
+    expiration_date = db.Column(db.DateTime)
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'))
     group = db.relationship('Group', backref=db.backref('events', lazy='joined'))
     is_processed = db.Column(db.Boolean, default=False, nullable=False)
@@ -61,15 +62,16 @@ class Event(db.Model):
             message_template = message_template.replace("{2}", self.entity_2_description)
         if self.entity_3_description:
             message_template = message_template.replace("{3}", self.entity_3_description)
-        devices = Device.query_active_devices_for_group(group=self.group, discart_users_id=[self.creator_id]).all()
+        devices = Device.query_active_devices_for_group(group=self.group, discard_user_ids=[self.creator_id]).all()
         pn_tokens = [device.pn_token for device in devices]
-        return ("Hi", message_template, pn_tokens)
+        return "Hi", message_template, pn_tokens
 
 
 class UserRole(IntFlag):
-    USER  = 1
+    USER = 1
     USER_ADMIN = 2
     BACKEND_ADMIN = 4
+
 
 class Device(db.Model):
     __tablename__ = "devices"
@@ -85,36 +87,38 @@ class Device(db.Model):
 
     def __init__(self, device_id, device_type, pn_token=None, active=True, user=None, created_at=datetime.utcnow()):
         self.device_id = device_id
-        self.device_type = device_type # "apple" "android"
+        self.device_type = device_type  # "apple" "android"
         self.pn_token = pn_token
         self.active = active
         self.user = user
         self.created_at = created_at
         self.updated_at = created_at
 
+    # noinspection PyPep8
     @staticmethod
     def query_active_devices_for_user(user):
-        return Device.query.filter(Device.user_id==user.id, Device.active==True, Device.pn_token.isnot(None))
+        return Device.query.filter(Device.user_id == user.id, Device.active == True, Device.pn_token.isnot(None))
+
+    # noinspection PyPep8
+    @staticmethod
+    def query_active_devices_for_group(group, discard_user_ids=None):
+        discard_user_ids = discard_user_ids or []
+        user_ids = [user.user_id for user in group.associated_users if user.user_id not in discard_user_ids]
+        return Device.query.filter(Device.user_id.in_(tuple(user_ids)), Device.active == True,
+                                   Device.pn_token.isnot(None))
 
     @staticmethod
-    def query_active_devices_for_group(group, discart_user_ids=None):
-        discart_user_ids = discart_user_ids or []
-        user_ids = [user.user_id for user in group.associated_users if user.user_id not in discart_user_ids]
-        return Device.query.filter(Device.user_id.in_(tuple(user_ids)), Device.active==True, Device.pn_token.isnot(None))
-
-
-    @staticmethod
-    def create_or_update(device_id, device_type, user = None, active=True, pn_token=None):
-        device = Device.first_by(device_id = device_id)
+    def create_or_update(device_id, device_type: str, user=None, active: bool = True, pn_token: str=None):
+        device = Device.first_by(device_id=device_id)
         if not device:
             device = Device(device_id=device_id, device_type=device_type, user=user, active=active, pn_token=pn_token)
             db.session.add(device)
         else:
             device.device_type = device_type
             device.active = active
-            if user is not None:
+            if user:
                 device.user = user
-            if pn_token is not None:
+            if pn_token:
                 device.pn_token = pn_token
         return device
 
@@ -156,9 +160,10 @@ class Group(db.Model):
         self.name = name
 
     @staticmethod
-    def get(id):
+    def get(id: int):
         """Get db entity that match the id"""
         return Group.query.get(id)
+
 
 class User(db.Model):
     __tablename__ = "users"
@@ -184,12 +189,14 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __init__(self, username, email, password=None, cellphone_number=None, cellphone_cc=None,
-                 fb_id=None, fb_access_token=None, cellphone_validation_code=None, cellphone_validation_code_expiration=None,
+                 fb_id=None, fb_access_token=None, cellphone_validation_code=None,
+                 cellphone_validation_code_expiration=None,
                  cellphone_validation_date=None, roles=UserRole.USER, created_at=datetime.utcnow()):
         self.username = username
         self.email = email
         if password:
-            self.password = bcrypt.generate_password_hash(password, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+            self.password = bcrypt.generate_password_hash(password,
+                                                          current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         self.created_at = created_at
         self.updated_at = created_at
         self.cellphone_number = cellphone_number
@@ -200,34 +207,6 @@ class User(db.Model):
         self.cellphone_validation_code_expiration = cellphone_validation_code_expiration
         self.cellphone_validation_date = cellphone_validation_date
         self.roles = roles.value
-
-    def encode_auth_token(self):
-        """Generates the auth token"""
-        try:
-            payload = {
-                'exp': datetime.utcnow() + timedelta(
-                    days=current_app.config['TOKEN_EXPIRATION_DAYS'], seconds=current_app.config['TOKEN_EXPIRATION_SECONDS']),
-                'iat': datetime.utcnow(),
-                'sub': self.id
-            }
-            return jwt.encode(
-                payload,
-                current_app.config.get('SECRET_KEY'),
-                algorithm='HS256'
-            )
-        except Exception as e:
-            return e
-
-    @staticmethod
-    def decode_auth_token(auth_token):
-        """Decodes the auth token - :param auth_token: - :return: integer|string"""
-        try:
-            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
-            return payload['sub']
-        except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
-        except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
 
     @staticmethod
     def first_by(**kwargs):
@@ -244,14 +223,42 @@ class User(db.Model):
         return User.query.get(id)
 
 
-    def encode_password_token(self, user_id):
+
+    def encode_auth_token(self) -> str:
+        """Generates the auth token"""
+        payload = {
+            'exp': datetime.utcnow() + timedelta(
+                days=current_app.config['TOKEN_EXPIRATION_DAYS'],
+                seconds=current_app.config['TOKEN_EXPIRATION_SECONDS']),
+            'iat': datetime.utcnow(),
+            'sub': self.id
+        }
+        return jwt.encode(
+            payload,
+            current_app.config.get('SECRET_KEY'),
+            algorithm='HS256'
+        )
+
+
+    @staticmethod
+    def decode_auth_token(auth_token) -> int:
+        """Decodes the auth token - :param auth_token: - :return: integer|string"""
+        try:
+            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
+            return payload['sub']
+        except jwt.ExpiredSignatureError:
+            raise UnautorizedException(message='Signature expired. Please log in again.')
+        except jwt.InvalidTokenError:
+            raise UnautorizedException(message='Invalid token. Please log in again.')
+
+    def encode_password_token(self) -> str:
         """Generates the auth token"""
         payload = {
             'exp': datetime.utcnow() + timedelta(
                 days=current_app.config['TOKEN_PASSWORD_EXPIRATION_DAYS'],
                 seconds=current_app.config['TOKEN_PASSWORD_EXPIRATION_SECONDS']),
             'iat': datetime.utcnow(),
-            'sub': user_id
+            'sub': self.id
         }
         return jwt.encode(
             payload,
@@ -260,21 +267,23 @@ class User(db.Model):
         )
 
     @staticmethod
-    def decode_password_token(pass_token):
+    def decode_password_token(pass_token) -> int:
         """Decodes the auth token - :param auth_token: - :return: integer|string"""
         try:
             payload = jwt.decode(pass_token, current_app.config.get('SECRET_KEY'))
             return payload['sub']
         except jwt.ExpiredSignatureError:
-            return 'Recovery expired. Please try again.'
+            raise BusinessException(message='Password recovery token expired. Please try again.')
         except jwt.InvalidTokenError:
-            return 'This recovery seems to be for another user. Please try in again.'
+            raise BusinessException(message='Invalid password recovery token. Please try again.')
 
     @staticmethod
-    def generate_cellphone_validation_code():
+    def generate_cellphone_validation_code() -> Tuple[str, datetime]:
+        """Generates cell phone number validation code and expiration time"""
         return str(randint(1000, 9999)), datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
 
-    def verify_cellphone_validation_code(self, code):
+    def verify_cellphone_validation_code(self, code) -> Tuple[bool, Optional[str]]:
+        """Validates that code matches with user.cellphone_validation_code and its not expired"""
         if not self.cellphone_validation_code or self.cellphone_validation_code != code:
             return False, 'Invalid validation code. Please try again.'
 

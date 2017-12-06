@@ -6,7 +6,7 @@ import coverage
 from flask_script import Manager
 from flask_migrate import MigrateCommand
 
-from project import app, db, celery
+from project import app, db
 from project.models.models import User, EventDescriptor, Group, UserGroupAssociation
 
 COV = coverage.coverage(
@@ -21,6 +21,7 @@ COV.start()
 manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
+
 @manager.command
 def test():
     """Runs the tests without code coverage."""
@@ -29,6 +30,7 @@ def test():
     if result.wasSuccessful():
         return 0
     return 1
+
 
 @manager.command
 def routes():
@@ -46,12 +48,14 @@ def routes():
     for line in sorted(output):
         print(line)
 
+
 @manager.command
 def recreate_db():
     """Recreates a database."""
     db.drop_all()
     db.create_all()
     db.session.commit()
+
 
 @manager.command
 def seed_db():
@@ -74,6 +78,7 @@ def seed_db():
     db.session.add(user_group_association3)
     db.session.commit()
 
+
 @manager.command
 def cov():
     """Runs the unit tests with coverage."""
@@ -88,6 +93,7 @@ def cov():
         COV.erase()
         return 0
     return 1
+
 
 if __name__ == '__main__':
     manager.run()
