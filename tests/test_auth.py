@@ -292,13 +292,13 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 401)
 
     def test_password_recovery(self):
-        user = add_user('justatest3', 'test@test.com3', 'password')
+        user = add_user('justatest3', 'test3@test.com', 'password')
 
         with self.client:
             response = self.client.post(
                 '/v1/auth/password_recovery',
                 data=json.dumps(dict(
-                    email='test@test.com3'
+                    email='test3@test.com'
                 )),
                 content_type='application/json',
                 headers=[('Accept', 'application/json')]
@@ -307,6 +307,71 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
+
+    def test_password_reset_expired(self):
+        user = add_user('justatest3', 'test@test.com', 'password')
+        token = user.encode_password_token().decode()
+        user = set_user_token_hash(user, token)
+        user_password_before = user.password
+        time.sleep(3)
+
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/password',
+                data=json.dumps(dict(
+                    token=token,
+                    password='password2'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Password recovery token expired. Please try again.')
+            self.assertEqual(response.status_code, 400)
+            #  check db password has not changed
+            self.assertEqual(user_password_before, user.password)
+
+
+    def test_password_reset_already_reset(self):
+        user = add_user('justatest3', 'test@test.com', 'password')
+        token = user.encode_password_token().decode()
+
+        user = set_user_token_hash(user, token)
+
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/password',
+                data=json.dumps(dict(
+                    token=token,
+                    password='password2'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully reset password.')
+            self.assertEqual(response.status_code, 200)
+
+        user_password_before = user.password
+
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/password',
+                data=json.dumps(dict(
+                    token=token,
+                    password='password3'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Invalid reset. Please try again.')
+            self.assertEqual(response.status_code, 404)
+            #  check db password has not changed
+            self.assertEqual(user_password_before, user.password)
 
     def test_password_recovery_user_not_registered(self):
 
@@ -371,10 +436,10 @@ class TestAuthBlueprint(BaseTestCase):
         token = user.encode_password_token().decode()
 
         user = set_user_token_hash(user, token)
-        user_password = user.password
+        user_password_before = user.password
 
         with self.client:
-            response = self.client.post(
+            response = self.client.put(
                 '/v1/auth/password',
                 data=json.dumps(dict(
                     token=token,
@@ -388,8 +453,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['message'], 'Successfully reset password.')
             self.assertEqual(response.status_code, 200)
             #  check db password have really changed
-            user_after = User.query.filter_by(id=user.id).first()
-            self.assertNotEqual(user_password, user_after.password)
+            self.assertNotEqual(user_password_before, user.password)
 
     def test_register_verify_cellphone(self):
         email = 'test@test.com'
