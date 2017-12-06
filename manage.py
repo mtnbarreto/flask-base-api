@@ -2,12 +2,16 @@
 
 import unittest
 import coverage
+import urllib.parse
 
 from flask_script import Manager
 from flask_migrate import MigrateCommand
 
 from project import app, db
-from project.models.models import User, EventDescriptor, Group, UserGroupAssociation
+from project.models.user import User
+from project.models.event_descriptor import EventDescriptor
+from project.models.group import Group
+from project.models.user_group_association import UserGroupAssociation
 
 COV = coverage.coverage(
     branch=True,
@@ -34,7 +38,6 @@ def test():
 
 @manager.command
 def routes():
-    import urllib
     output = []
     for rule in app.url_map.iter_rules():
         options = {}

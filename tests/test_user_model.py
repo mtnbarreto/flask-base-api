@@ -3,7 +3,7 @@
 from sqlalchemy.exc import IntegrityError
 
 from project import db
-from project.models.models import User
+from project.models.user import User
 from tests.base import BaseTestCase
 from tests.utils import add_user
 

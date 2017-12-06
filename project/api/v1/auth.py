@@ -4,9 +4,10 @@ from flask import Blueprint, request, current_app
 from sqlalchemy import  or_
 
 from project import bcrypt, db
-from project.api.common.utils import exceptions
+from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnautorizedException
 from project.api.common.utils.decorators import authenticate, privileges
-from project.models.models import User, Device, UserRole
+from project.models.user import User, UserRole
+from project.models.device import  Device
 from project.api.common.utils.constants import Constants
 from facepy import GraphAPI
 from project.api.common.utils.helpers import session_scope
@@ -19,12 +20,12 @@ def register_user():
     # get post data
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
     if not password or not username or not email:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     # check for existing user
     user = User.first(or_(User.username == username, User.email == email))
     if not user:
@@ -45,10 +46,10 @@ def register_user():
             from project.api.common.utils.mails import send_registration_email
             send_registration_email(new_user)
         return {
-                   'status': 'success',
-                   'message': 'Successfully registered.',
-                   'auth_token': auth_token.decode()
-               }, 201
+            'status': 'success',
+            'message': 'Successfully registered.',
+            'auth_token': auth_token
+        }, 201
     else:
         # user already registered, set False to device.active
         if Constants.HttpHeaders.DEVICE_ID in request.headers:
@@ -57,7 +58,7 @@ def register_user():
             if device:
                 with session_scope(db.session):
                     device.active = False
-        raise exceptions.BusinessException(message='Sorry. That user already exists.')
+        raise BusinessException(message='Sorry. That user already exists.')
 
 
 @auth_blueprint.route('/auth/login', methods=['POST'])
@@ -65,11 +66,11 @@ def login_user():
     # get post data
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     email = post_data.get('email')
     password = post_data.get('password')
     if not password:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
 
     user = User.first_by(email=email)
     if user and bcrypt.check_password_hash(user.password, password):
@@ -93,7 +94,7 @@ def login_user():
             if device:
                 with session_scope(db.session):
                     device.active = False
-        raise exceptions.NotFoundException(message='User does not exist.')
+        raise NotFoundException(message='User does not exist.')
 
 
 @auth_blueprint.route('/auth/logout', methods=['GET'])
@@ -133,10 +134,10 @@ def password_recovery():
     ''' creates a password_recovery_hash and sends email to user (assumes login=email)'''
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     email = post_data.get('email')
     if not email:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
 
     # fetch the user data
     user = User.first_by(email=email)
@@ -152,7 +153,7 @@ def password_recovery():
             'message': 'Successfully sent email with password recovery.',
         }
     else:
-        raise exceptions.NotFoundException(message='Login/email does not exist, please write a valid login/email')
+        raise NotFoundException(message='Login/email does not exist, please write a valid login/email')
 
 
 @auth_blueprint.route('/auth/password', methods=['POST'])
@@ -160,11 +161,11 @@ def password_reset():
     ''' reset user password (assumes login=email)'''
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     token = post_data.get('token')
     pw_new = post_data.get('password')
     if not token or not pw_new:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
 
     # fetch the user data
     user_id = User.decode_password_token(token)
@@ -177,10 +178,9 @@ def password_reset():
             'message': 'Successfully reset password.',
         }
     else:
-        raise exceptions.NotFoundException(message='Invalid reset, please try again')
+        raise NotFoundException(message='Invalid reset, please try again')
 
 
-# noinspection PyCallByClass,PyCallByClass
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
 def facebook_login():
     ''' logs in user using fb_access_token returning the corresponding JWT
@@ -188,15 +188,15 @@ def facebook_login():
 
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     fb_access_token = post_data.get('fb_access_token')
     if not fb_access_token:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     try:
         graph = GraphAPI(fb_access_token)
         profile = graph.get("me?fields=id,name,email,link")
     except Exception:
-        raise exceptions.UnautorizedException()
+        raise UnautorizedException()
 
     fb_user = User.first(User.fb_id == profile['id'])
     if not fb_user:
@@ -218,10 +218,10 @@ def facebook_login():
         # generate auth token
         auth_token = user.encode_auth_token()
         return {
-                   'status': 'success',
-                   'message': 'Successfully facebook registered.',
-                   'auth_token': auth_token.decode()
-               }, code
+            'status': 'success',
+            'message': 'Successfully facebook registered.',
+            'auth_token': auth_token
+        }, code
     else:
         auth_token = fb_user.encode_auth_token()
         with session_scope(db.session):

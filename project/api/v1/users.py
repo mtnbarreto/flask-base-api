@@ -3,10 +3,10 @@
 from flask import Blueprint, request
 from sqlalchemy import exc, or_
 
-from project.models.models import User, UserRole
+from project.models.user import User, UserRole
 from project import db
 from project.api.common.utils.decorators import authenticate, privileges
-from project.api.common.utils import exceptions
+from project.api.common.utils.exceptions import NotFoundException, BusinessException, InvalidPayload
 
 
 users_blueprint = Blueprint('users', __name__, template_folder='../templates/users')
@@ -49,7 +49,7 @@ def push_echo(user_id: int):
 def add_user(_):
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
@@ -66,10 +66,10 @@ def add_user(_):
             }
             return response_object, 201
         else:
-            raise exceptions.BusinessException(message='Sorry. That email or username already exists.')
-    except (exc.IntegrityError, ValueError) as e:
+            raise BusinessException(message='Sorry. That email or username already exists.')
+    except (exc.IntegrityError, ValueError):
         db.session.rollback()
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
 
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
 @authenticate
@@ -79,18 +79,17 @@ def get_single_user(_, user_id):
     try:
         user = User.get(int(user_id))
         if not user:
-            raise exceptions.NotFoundException(message='User does not exist.')
-        else:
-            return {
-                'status': 'success',
-                'data': {
-                  'username': user.username,
-                  'email': user.email,
-                  'created_at': user.created_at
-                }
+            raise NotFoundException(message='User does not exist.')
+        return {
+            'status': 'success',
+            'data': {
+              'username': user.username,
+              'email': user.email,
+              'created_at': user.created_at
             }
+        }
     except ValueError:
-        raise exceptions.NotFoundException(message='User does not exist.')
+        raise NotFoundException(message='User does not exist.')
 
 
 @users_blueprint.route('/users', methods=['GET'])

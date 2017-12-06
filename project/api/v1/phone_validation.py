@@ -6,7 +6,7 @@ from flask import Blueprint, request, current_app
 from project import db
 from project.api.common.utils import exceptions
 from project.api.common.utils.decorators import authenticate
-from project.models.models import User
+from project.models.user import User
 from project.api.common.utils.helpers import session_scope
 
 phone_validation_blueprint = Blueprint('phone_validation', __name__)

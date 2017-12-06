@@ -1,8 +1,11 @@
 # project/api/common/utils/push_notifications.py
 
-from project.models.models import Event, User, Device
-from project.tasks.push_notification_tasks import send_async_push_notifications
 from project import db, app
+from project.models.event import Event
+from project.models.user import User
+from project.models.device import Device
+from project.tasks.push_notification_tasks import send_async_push_notifications
+
 
 def send_notifications_for_event(event: Event):
     message_title, message_body, pn_tokens = event.push_notification_data()

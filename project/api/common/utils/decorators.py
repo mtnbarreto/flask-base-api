@@ -1,9 +1,9 @@
 # project/api/common/utils/decorators.py
 
-from flask import jsonify, request, abort
+from flask import request
 from functools import wraps
-from project.api.common.utils import exceptions
-from project.models.models import User, UserRole
+from project.api.common.utils.exceptions import UnautorizedException, ForbiddenException
+from project.models.user import User, UserRole
 
 
 def privileges(roles):
@@ -12,10 +12,10 @@ def privileges(roles):
         def decorated_function(logged_user_id, *args, **kwargs):
             user = User.get(logged_user_id)
             if not user or not user.active:
-                raise exceptions.UnautorizedException(message='Something went wrong. Please contact us.')
+                raise UnautorizedException(message='Something went wrong. Please contact us.')
             user_roles = UserRole(user.roles)
             if not bool(user_roles & roles):
-                raise exceptions.ForbiddenException()
+                raise ForbiddenException()
             return f(logged_user_id, *args, **kwargs)
         return decorated_function
     return actual_decorator
@@ -25,11 +25,11 @@ def authenticate(f):
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
         if not auth_header:
-            raise exceptions.UnautorizedException() # 'Provide a valid auth token.' 403
+            raise UnautorizedException()
         auth_token = auth_header.split(" ")[1]
         user_id = User.decode_auth_token(auth_token)
         user = User.get(user_id)
         if not user or not user.active:
-            raise exceptions.UnautorizedException(message='Something went wrong. Please contact us.')
+            raise UnautorizedException(message='Something went wrong. Please contact us.')
         return f(user_id, *args, **kwargs)
     return decorated_function

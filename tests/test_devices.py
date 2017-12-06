@@ -1,7 +1,8 @@
 import json
 import uuid
 
-from project.models.models import UserRole, Device
+from project.models.user import UserRole
+from project.models.device import Device
 from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
 from tests.utils import add_user
