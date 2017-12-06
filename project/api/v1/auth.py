@@ -164,7 +164,7 @@ def password_recovery():
         raise NotFoundException(message='Login/email does not exist, please write a valid login/email')
 
 
-@auth_blueprint.route('/auth/password', methods=['POST'])
+@auth_blueprint.route('/auth/password', methods=['PUT'])
 @accept('application/json')
 def password_reset():
     ''' reset user password (assumes login=email)'''
@@ -177,17 +177,26 @@ def password_reset():
         raise InvalidPayload()
 
     # fetch the user data
-    user_id = User.decode_password_token(token)
-    user = User.get(user_id)
-    if user and bcrypt.check_password_hash(user.token_hash, token):
+    try:
+        user_id = User.decode_password_token(token)
+        user = User.get(user_id)
+        if not user.token_hash:
+            raise NotFoundException(message='Invalid reset. Please try again.')
+        bcrypt.check_password_hash(user.token_hash, token)
+    except Exception as e:
+        raise e
+
+    if user:
         with session_scope(db.session):
             user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+            user.token_hash = None
         return {
             'status': 'success',
             'message': 'Successfully reset password.',
         }
     else:
-        raise NotFoundException(message='Invalid reset, please try again')
+        raise NotFoundException(message='Invalid reset. Please try again')
+
 
 
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
