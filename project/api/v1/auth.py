@@ -42,8 +42,6 @@ def register_user():
         # need another scope if not new_user does not exists yet
         with session_scope(db.session) as session:
             token = new_user.encode_email_token()
-            current_app.logger.info('%s user', str(new_user.id))
-            current_app.logger.info('%s token', token.decode())
             new_user.email_token_hash = bcrypt.generate_password_hash(token, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
 
         if not current_app.testing:

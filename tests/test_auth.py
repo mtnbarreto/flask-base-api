@@ -5,7 +5,7 @@ from project import db
 from project.models.user import User
 from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
-from tests.utils import add_user, set_user_token_hash
+from tests.utils import add_user, set_user_token_hash, set_user_email_token_hash
 
 class TestAuthBlueprint(BaseTestCase):
 
@@ -567,3 +567,59 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 400)
             self.assertIn('Invalid validation code. Please try again.', data['message'])
             self.assertIn('error', data['status'])
+
+
+    def test_email_verification(self):
+        user = add_user('justatest3', 'test3@test.com', 'password')
+
+        with self.client:
+            response = self.client.put(
+                '/v1/auth/email_verification',
+                data=json.dumps(dict(
+                    email='test3@test.com'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully sent email with email verification.')
+            self.assertEqual(response.status_code, 200)
+
+
+    def test_email_verification_user_not_registered(self):
+
+        with self.client:
+            response = self.client.post(
+                '/v1/auth/password_recovery',
+                data=json.dumps(dict(
+                    email='not_exists@test.com'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, 404)
+            self.assertIn(
+                'Login/email does not exist, please write a valid login/email', data['message'])
+            self.assertIn('error', data['status'])
+
+
+    def test_verify_email(self):
+        user = add_user('justatest', 'test@test.com', 'password')
+        token = user.encode_email_token().decode()
+
+        user = set_user_email_token_hash(user, token)
+
+        with self.client:
+            response = self.client.get(
+                f'/v1/auth/email_verification/{token}',
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(response.data.decode())
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successful email verification.')
+            self.assertIsNotNone(user.email_validation_date)
+
