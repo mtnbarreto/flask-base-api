@@ -55,6 +55,7 @@ def routes():
 @manager.command
 def recreate_db():
     """Recreates a database."""
+    db.reflect()
     db.drop_all()
     db.create_all()
     db.session.commit()
