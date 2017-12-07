@@ -4,6 +4,7 @@ from flask import Blueprint, request, current_app
 from sqlalchemy import  or_
 from facepy import GraphAPI
 from flask_accept import accept
+from datetime import datetime
 
 from project import bcrypt, db
 from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnauthorizedException
@@ -37,6 +38,16 @@ def register_user():
         new_user = User(username=username, email=email, password=password)
         with session_scope(db.session) as session:
             session.add(new_user)
+
+        # need another scope if not new_user does not exists yet
+        with session_scope(db.session) as session:
+            token = new_user.encode_email_token()
+            new_user.email_token_hash = bcrypt.generate_password_hash(token, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+
+        if not current_app.testing:
+            from project.api.common.utils.mails import send_registration_email
+            send_registration_email(new_user, token.decode())
+
         # save the device
         if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
             device_id = request.headers.get(Constants.HttpHeaders.DEVICE_ID)
@@ -45,14 +56,10 @@ def register_user():
                 Device.create_or_update(device_id=device_id, device_type=device_type, user=user)
         # generate auth token
         auth_token = new_user.encode_auth_token()
-        # send registration email
-        if not current_app.testing:
-            from project.api.common.utils.mails import send_registration_email
-            send_registration_email(new_user)
         return {
             'status': 'success',
             'message': 'Successfully registered.',
-            'auth_token': auth_token
+            'auth_token': auth_token.decode()
         }, 201
     else:
         # user already registered, set False to device.active
@@ -244,3 +251,48 @@ def facebook_login():
             'message': 'Successfully facebook login.',
             'auth_token': auth_token.decode()
         }
+
+
+@auth_blueprint.route('/auth/email_verification', methods=['PUT'])
+@accept('application/json')
+def email_verification():
+    ''' creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend)'''
+    post_data = request.get_json()
+    if not post_data:
+        raise InvalidPayload()
+    email = post_data.get('email')
+    if not email:
+        raise InvalidPayload()
+
+    # fetch the user data
+    user = User.first_by(email=email)
+    if user:
+        token = user.encode_email_token()
+        with session_scope(db.session):
+            user.email_token_hash = bcrypt.generate_password_hash(token, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        if not current_app.testing:
+            from project.api.common.utils.mails import send_email_verification_email
+            send_email_verification_email(user, token.decode())  # send recovery email
+        return {
+            'status': 'success',
+            'message': 'Successfully sent email with email verification.',
+        }
+    else:
+        raise NotFoundException(message='Login/email does not exist, please write a valid login/email')
+
+
+@auth_blueprint.route('/auth/email_verification/<token>', methods=['GET'])
+def verify_email(token):
+    ''' creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend)'''
+    user_id = User.decode_email_token(token)
+    user = User.get(user_id)
+    if not user or not user.email_token_hash:
+        raise NotFoundException(message='Invalid verification. Please try again.')
+    bcrypt.check_password_hash(user.email_token_hash, token)
+
+    with session_scope(db.session):
+        user.email_validation_date = datetime.utcnow()
+    return {
+        'status': 'success',
+        'message': 'Successful email verification.',
+    }

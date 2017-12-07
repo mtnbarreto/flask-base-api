@@ -40,3 +40,8 @@ def set_user_token_hash(user: User, token: str):
     user.token_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
     db.session.commit()
     return user
+
+def set_user_email_token_hash(user: User, token: str):
+    user.email_token_hash = bcrypt.generate_password_hash(token, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+    db.session.commit()
+    return user
