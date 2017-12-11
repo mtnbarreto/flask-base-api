@@ -45,7 +45,7 @@ def email_verification(user_id):
 
 
 @email_validation_blueprint.route('/email_verification/<token>', methods=['GET'])
-def verify_email(user_id, token):
+def verify_email(token):
     ''' creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend)'''
     user_id = User.decode_email_token(token)
     user = User.get(user_id)
