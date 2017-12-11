@@ -5,14 +5,14 @@ from flask import Blueprint, request, current_app
 from flask_accept import accept
 
 from project import db
-from project.api.common.utils import exceptions
+from project.api.common.utils.exceptions import InvalidPayload, BusinessException
 from project.api.common.utils.decorators import authenticate
 from project.models.user import User
 from project.api.common.utils.helpers import session_scope
 
 phone_validation_blueprint = Blueprint('phone_validation', __name__)
 
-@phone_validation_blueprint.route('/auth/cellphone', methods=['POST'])
+@phone_validation_blueprint.route('/cellphone', methods=['POST'])
 @accept('application/json')
 @authenticate
 def register_user_cellphone(user_id: int):
@@ -21,14 +21,14 @@ def register_user_cellphone(user_id: int):
     '''
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     cellphone_number = post_data.get('cellphone_number')
     cellphone_cc = post_data.get('cellphone_cc')
     if not cellphone_number or not cellphone_cc:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     user = User.get(user_id)
     if user.cellphone_validation_date and user.cellphone_number == cellphone_number and user.cellphone_cc == cellphone_cc:
-        raise exceptions.BusinessException(message='Registered. You have already registered this cellphone number.')
+        raise BusinessException(message='Registered. You have already registered this cellphone number.')
 
     cellphone_validation_code, cellphone_validation_code_expiration = User.generate_cellphone_validation_code()
     with session_scope(db.session) as session:
@@ -48,20 +48,20 @@ def register_user_cellphone(user_id: int):
     }
 
 
-@phone_validation_blueprint.route('/auth/cellphone/verify', methods=['PUT'])
+@phone_validation_blueprint.route('/cellphone/verify', methods=['PUT'])
 @accept('application/json')
 @authenticate
 def verify_user_cellphone(user_id: int):
     ''' verifies cellphone_validation_code, idempotent (could be used many times) '''
     post_data = request.get_json()
     if not post_data:
-        raise exceptions.InvalidPayload()
+        raise InvalidPayload()
     validation_code = post_data.get('validation_code')
     user = User.get(user_id)
 
     valid_code, message = user.verify_cellphone_validation_code(validation_code)
     if not valid_code:
-        raise exceptions.BusinessException(message=message)
+        raise BusinessException(message=message)
 
     with session_scope(db.session) as session:
         user.cellphone_validation_code = None

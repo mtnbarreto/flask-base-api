@@ -471,7 +471,7 @@ class TestAuthBlueprint(BaseTestCase):
             )
 
             response = self.client.post(
-                '/v1/auth/cellphone',
+                '/v1/cellphone',
                 data=json.dumps(dict(
                     cellphone_number='99993298',
                     cellphone_cc='+598'
@@ -479,16 +479,16 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json',
                 headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
+            self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode())
             self.assertEqual(data['message'], 'Successfully sent validation code.')
             self.assertEqual(data['status'], 'success')
-            self.assertEqual(response.status_code, 200)
             self.assertIsNotNone(user.cellphone_validation_code)
             self.assertIsNotNone(user.cellphone_validation_code_expiration)
             self.assertIsNone(user.cellphone_validation_date)
 
             response = self.client.put(
-                '/v1/auth/cellphone/verify',
+                '/v1/cellphone/verify',
                 data=json.dumps(dict(
                     validation_code=user.cellphone_validation_code
                 )),
@@ -520,7 +520,7 @@ class TestAuthBlueprint(BaseTestCase):
             )
 
             response = self.client.post(
-                '/v1/auth/cellphone',
+                '/v1/cellphone',
                 data=json.dumps(dict(
                     cellphone_number='99993298',
                     cellphone_cc='+598'
@@ -528,27 +528,27 @@ class TestAuthBlueprint(BaseTestCase):
                 content_type='application/json',
                 headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
+            self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successfully sent validation code.')
-            self.assertEqual(response.status_code, 200)
             self.assertIsNotNone(user.cellphone_validation_code)
             self.assertIsNotNone(user.cellphone_validation_code_expiration)
             self.assertIsNone(user.cellphone_validation_date)
 
         with self.client:
             response = self.client.put(
-                '/v1/auth/cellphone/verify',
+                '/v1/cellphone/verify',
                 data=json.dumps(dict(
                     validation_code=user.cellphone_validation_code
                 )),
                 content_type='application/json',
                 headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
             )
+            self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successful cellphone validation.')
-            self.assertEqual(response.status_code, 200)
             self.assertIsNone(user.cellphone_validation_code)
             self.assertIsNone(user.cellphone_validation_code_expiration)
             self.assertIsNotNone(user.cellphone_validation_date)
@@ -556,7 +556,7 @@ class TestAuthBlueprint(BaseTestCase):
         # try to verify again
         with self.client:
             response = self.client.put(
-                '/v1/auth/cellphone/verify',
+                '/v1/cellphone/verify',
                 data=json.dumps(dict(
                     validation_code=user.cellphone_validation_code
                 )),
@@ -570,21 +570,39 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_email_verification(self):
-        user = add_user('justatest3', 'test3@test.com', 'password')
+
+        email = 'test@test.com'
+        user = add_user('justatest1', email, 'password')
 
         with self.client:
-            response = self.client.put(
-                '/v1/auth/email_verification',
+            resp_login = self.client.post(
+                '/v1/auth/login',
                 data=json.dumps(dict(
-                    email='test3@test.com'
+                    email=email,
+                    password='password'
                 )),
                 content_type='application/json',
                 headers=[('Accept', 'application/json')]
             )
+        #
+        #
+        #
+        # user = add_user('justatest3', 'test3@test.com', 'password')
+        #
+        # with self.client:
+            response = self.client.put(
+                '/v1/email_verification',
+                data=json.dumps(dict(
+                    email=email
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
+            )
+            self.assertEqual(response.status_code, 200)
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successfully sent email with email verification.')
-            self.assertEqual(response.status_code, 200)
+
 
 
     def test_email_verification_user_not_registered(self):
@@ -608,12 +626,11 @@ class TestAuthBlueprint(BaseTestCase):
     def test_verify_email(self):
         user = add_user('justatest', 'test@test.com', 'password')
         token = user.encode_email_token().decode()
-
         user = set_user_email_token_hash(user, token)
 
         with self.client:
             response = self.client.get(
-                f'/v1/auth/email_verification/{token}',
+                f'/v1/email_verification/{token}',
                 content_type='application/json',
                 headers=[('Accept', 'application/json')]
             )
@@ -622,4 +639,3 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successful email verification.')
             self.assertIsNotNone(user.email_validation_date)
-
