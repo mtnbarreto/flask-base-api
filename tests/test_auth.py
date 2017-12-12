@@ -639,3 +639,80 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successful email verification.')
             self.assertIsNotNone(user.email_validation_date)
+
+    def test_password_change(self):
+        email = 'test@test.com'
+        old_password = 'old_password'
+        user = add_user('justatest1', email, old_password)
+
+        with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password=old_password
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+
+            response = self.client.put(
+                '/v1/auth/password_change',
+                data=json.dumps(dict(
+                    old_password=old_password,
+                    new_password='new_password'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully changed password.')
+
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password='new_password'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+            data = json.loads(resp_login.data.decode())
+            self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['message'], 'Successfully logged in.')
+            self.assertTrue(data['auth_token'])
+            self.assertEqual(response.content_type, 'application/json')
+            self.assertEqual(response.status_code, 200)
+
+    def test_password_change_invalid_password(self):
+        email = 'test@test.com'
+        old_password = 'old_password'
+        user = add_user('justatest1', email, old_password)
+
+        with self.client:
+            resp_login = self.client.post(
+                '/v1/auth/login',
+                data=json.dumps(dict(
+                    email=email,
+                    password=old_password
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json')]
+            )
+
+            response = self.client.put(
+                '/v1/auth/password_change',
+                data=json.dumps(dict(
+                    old_password='wrong' + old_password,
+                    new_password='new_password'
+                )),
+                content_type='application/json',
+                headers=[('Accept', 'application/json'), (Constants.HttpHeaders.AUTHORIZATION, 'Bearer ' + json.loads(resp_login.data.decode())['auth_token'])]
+            )
+            self.assertEqual(response.status_code, 400)
+            data = json.loads(response.data.decode())
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['message'], 'Invalid password. Please try again.')
+
