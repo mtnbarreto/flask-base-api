@@ -138,7 +138,9 @@ def get_user_status(user_id: int):
             'username': user.username,
             'email': user.email,
             'active': user.active,
-            'created_at': user.created_at
+            'created_at': user.created_at,
+            'email_validation_date': user.email_validation_date,
+            'cellphone_validation_date': user.cellphone_validation_date
         }
     }
 
@@ -187,9 +189,8 @@ def password_reset():
 
     user_id = User.decode_password_token(token)
     user = User.get(user_id)
-    if not user or not user.token_hash:
+    if not user or not user.token_hash or not bcrypt.check_password_hash(user.token_hash, token):
         raise NotFoundException(message='Invalid reset. Please try again.')
-    bcrypt.check_password_hash(user.token_hash, token)
 
     with session_scope(db.session):
         user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
@@ -197,6 +198,32 @@ def password_reset():
     return {
         'status': 'success',
         'message': 'Successfully reset password.',
+    }
+
+
+@auth_blueprint.route('/auth/password_change', methods=['PUT'])
+@accept('application/json')
+@authenticate
+def password_change(user_id: int):
+    ''' changes user password when logged in'''
+    post_data = request.get_json()
+    if not post_data:
+        raise InvalidPayload()
+    pw_old = post_data.get('old_password')
+    pw_new = post_data.get('new_password')
+    if not pw_old or not pw_new:
+        raise InvalidPayload()
+
+    # fetch the user data
+    user = User.get(user_id)
+    if not bcrypt.check_password_hash(user.password, pw_old):
+        raise BusinessException(message='Invalid password. Please try again.')
+
+    with session_scope(db.session):
+        user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+    return {
+        'status': 'success',
+        'message': 'Successfully changed password.',
     }
 
 
@@ -229,8 +256,7 @@ def facebook_login():
                 user.fb_id = profile['id']
             else:
                 # Create the user and insert it into the database
-                user = User(username=profile['name'],
-                            email=profile['email'],
+                user = User(email=profile['email'],
                             fb_id=profile['id'],
                             fb_access_token=fb_access_token)
                 session.add(user)
@@ -240,7 +266,7 @@ def facebook_login():
         return {
             'status': 'success',
             'message': 'Successfully facebook registered.',
-            'auth_token': auth_token
+            'auth_token': auth_token.decode()
         }, code
     else:
         auth_token = fb_user.encode_auth_token()
@@ -251,3 +277,40 @@ def facebook_login():
             'message': 'Successfully facebook login.',
             'auth_token': auth_token.decode()
         }
+
+
+@auth_blueprint.route('/auth/facebook/set_standalone_user', methods=['PUT'])
+@accept('application/json')
+@authenticate
+def set_standalone_user(user_id: int):
+    ''' changes user password when logged in'''
+    post_data = request.get_json()
+    if not post_data:
+        raise InvalidPayload()
+    username = post_data.get('username')
+    pw_old = post_data.get('old_password')
+    pw_new = post_data.get('new_password')
+    if not username or not pw_old or not pw_new:
+        raise InvalidPayload()
+
+    # fetch the user data
+    user = User.get(user_id)
+    if not user.fb_id:
+        raise NotFoundException(message='Must be a facebook user login. Please try again.')
+
+    # fetch the user data
+    user = User.get(user_id)
+    if not bcrypt.check_password_hash(user.password, pw_old):
+        raise NotFoundException(message='Invalid password. Please try again.')
+
+    if not User.first(User.username == username):
+        with session_scope(db.session):
+            user.username = username
+            user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        return {
+            'status': 'success',
+            'message': 'Successfully changed password.',
+        }
+    else:
+        raise BusinessException(message='Sorry. That username already exists, choose another username')
+
