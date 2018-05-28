@@ -1,2 +1,101 @@
+# Flask Base API
+
+This repository is part of a series of repositories that aim to create a starting point to develop a REST API using Python and Flask as main technologies.
+
+Features:
+
+* Development environment with Docker that supports Test-Driven Development (TDD).
+* Staging, Testing, Production environments.
+* RESTful API powered by Python, Flask web framework, postgres DB, rabbitmq and other technologies.
+* Unit tests covering each of the REST API services.
+* Code coverage.
+* RESTful API documentation via Swagger.
+* Easily visualize and consume RESTful API via Swagger UI.
+* RabbitMQ message broker and RabbitMQ management plugin integration.
 
 
+## Contents
+
+* [Quick start guide](#quick-start-guide)
+  + [Requirements](#requirements)
+* [Dependencies](#dependencies)
+* [RESTful endpoints](#restful-endpoints)
+
+## Quick start guide
+
+#### Requirements
+
+* Docker
+* Docker Compose
+* Docker Machine
+
+For mac os follow this guide to install them: https://docs.docker.com/docker-for-mac/install/
+
+
+1 - Create a folder to clone all projects.
+
+```bash
+  mkdir <my_folder> && cd <myfolder>
+```
+
+2 - Clone all the projects from <myfolder> folder.
+
+```bash
+  git clone git@github.com:mtnbarreto/flask-base-api.git
+  git clone git@github.com:mtnbarreto/flask-base-main.git
+  git clone git@github.com:mtnbarreto/base-swagger.git
+```
+
+3 - Move to `flask-base-main`, build the images and run the containers.
+
+In order to run the containers properly we need to set up some env variables.
+
+
+```bash
+cd fask-base-main
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+Now you can check swagger RESTful API documentation visiting http://localhost:8080.
+RESTful API is available under http://localhost:5001/v1. You can also use port 80 since nginx r
+
+After running the previous commands you should be able to see all dockers containers of the app by:
+
+```bach
+docker-compose ps
+```
+
+```bash
+Name                       Command                  State                                                 Ports                                           
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+celery-worker            /bin/sh -c celery -A proje ...   Up                                                                                                       
+flask-base-db            docker-entrypoint.sh postgres    Up (healthy)   0.0.0.0:5435->5432/tcp                                                                    
+flask-base-service       /bin/sh -c gunicorn -b 0.0 ...   Up             0.0.0.0:5001->5000/tcp                                                                    
+message-broker-service   docker-entrypoint.sh rabbi ...   Up             15671/tcp, 0.0.0.0:15675->15672/tcp, 25672/tcp, 4369/tcp, 5671/tcp, 0.0.0.0:5675->5672/tcp
+nginx                    nginx -g daemon off;             Up             0.0.0.0:80->80/tcp                                                                        
+redis-db                 docker-entrypoint.sh redis ...   Up             0.0.0.0:6375->6379/tcp                                                                    
+swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0:8080->8080/tcp
+```
+
+
+## Dependencies
+
+* Python v3.6.5
+* Docker v18.03.1-ce
+* Docker Compose v1.21.1
+* Docker Machine v0.14.0
+* Docker Compose file v3.6
+* Flask v1.0.2
+* Flask-SQLAlchemy v2.3.2
+* Flask-Testing v0.6.2
+* psycopg2 v2.7.3.2
+* Gunicorn v19.7.1
+* Nginx v1.13.8
+* Bootstrap 4.0.0
+
+## RESTful endpoints
+
+|Endpoint| HTTP Method | Operation  | Result |
+|:---|:---:|---|---|
+| `/ping`  | `GET`  | READ | Sanity check  |

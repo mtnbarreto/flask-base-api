@@ -20,7 +20,7 @@ six==1.11.0
 Werkzeug==0.14.1
 flask-bcrypt==0.7.1
 pyjwt==1.5.3
-celery==4.1.0
+celery==4.1.1
 redis==2.10.6
 twilio==6.8.0
 flask-cors==3.0.3
