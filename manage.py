@@ -4,6 +4,7 @@ import unittest
 import coverage
 import urllib.parse
 
+from flask.cli import FlaskGroup
 from flask_script import Manager
 from flask_migrate import MigrateCommand
 
@@ -12,6 +13,8 @@ from project.models.user import User
 from project.models.event_descriptor import EventDescriptor
 from project.models.group import Group
 from project.models.user_group_association import UserGroupAssociation
+
+cli = FlaskGroup(app)
 
 COV = coverage.coverage(
     branch=True,
@@ -52,7 +55,7 @@ def routes():
         print(line)
 
 
-@manager.command
+@cli.command()
 def recreate_db():
     """Recreates a database."""
     db.reflect()
@@ -61,7 +64,7 @@ def recreate_db():
     db.session.commit()
 
 
-@manager.command
+@cli.command()
 def seed_db():
     """Seeds the database."""
     event_desc = EventDescriptor(id=1, name="Seed Events Name", description="Seed db Event from {1}")
@@ -98,6 +101,9 @@ def cov():
         return 0
     return 1
 
+
+if __name__ == '__main__':
+    cli()
 
 if __name__ == '__main__':
     manager.run()

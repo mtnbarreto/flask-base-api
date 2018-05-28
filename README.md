@@ -57,6 +57,10 @@ docker-compose build --no-cache
 docker-compose up -d
 ```
 
+> `docker-compose build` build the images. `--no-cache` arg indicates the cache should not be used. Docker caches the result of the build and use it in the subsequent builds. Remote this arg to build the images faster.
+> `docker-compose up` fires up the containers. The `-d` flag is used to run the containers in the background.
+
+
 Now you can check swagger RESTful API documentation visiting http://localhost:8080.
 RESTful API is available under http://localhost:5001/v1. You can also use port 80 since nginx r
 
@@ -77,6 +81,27 @@ nginx                    nginx -g daemon off;             Up             0.0.0.0
 redis-db                 docker-entrypoint.sh redis ...   Up             0.0.0.0:6375->6379/tcp                                                                    
 swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0:8080->8080/tcp
 ```
+
+
+> `docker-compose logs` allows us to see all docker compose containers logs.
+
+
+## Commands
+
+### How to recreate the database
+
+There is a command already implemented in the RESTful API. To run the command we should invoke it through `flask-base-service` container as the following command shows. Basically the commands runs `python manage.py recreate_db` in `flask-base-service` container.
+
+```bash
+docker-compose run flask-base-service python manage.py recreate_db
+```
+
+> Development, Testing and Production db are automatically created when db container runs so the first time we run the app we don't need to recreate the db.
+
+#### How to run tests
+
+
+
 
 
 ## Dependencies
