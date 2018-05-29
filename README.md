@@ -88,6 +88,47 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 
 ## Commands
 
+### Base commands
+
+#### Show the routes for the app
+
+```bash
+docker-compose run flask-base-service flask routes
+```
+
+#### Runs a shell in the app context
+
+```bash
+docker-compose run flask-base-service flask shell
+```
+
+### Migrations
+
+#### Perform database migrations
+
+```bash
+docker-compose run flask-base-service db [OPTIONS] COMMAND [ARGS]...
+```
+
+> docker-compose run flask-base-service flask db --help
+
+```bash
+Commands:
+  branches   Show current branch points
+  current    Display the current revision for each...
+  downgrade  Revert to a previous version
+  edit       Edit a revision file
+  heads      Show current available heads in the script...
+  history    List changeset scripts in chronological...
+  init       Creates a new migration repository.
+  merge      Merge two revisions together, creating a new...
+  migrate    Autogenerate a new revision file (Alias for...
+  revision   Create a new revision file.
+  show       Show the revision denoted by the given...
+  stamp      'stamp' the revision table with the given...
+```
+
+
 ### How to recreate the database
 
 There is a command already implemented in the RESTful API. To run the command we should invoke it through `flask-base-service` container as the following command shows. Basically the commands runs `python manage.py recreate_db` in `flask-base-service` container.
