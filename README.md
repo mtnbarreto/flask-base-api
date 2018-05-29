@@ -121,6 +121,43 @@ docker-compose run flask-base-service python manage.py recreate_db
 
 ## RESTful endpoints
 
-|Endpoint| HTTP Method | Operation  | Result |
-|:---|:---:|---|---|
-| `/ping`  | `GET`  | READ | Sanity check  |
+### Sanity Check
+
+| Endpoint | HTTP Method | Result |
+|:---|:---:|---|
+| `/ping`  | `GET` | Sanity check  |
+
+### Authentication
+
+| Endpoint | HTTP Method | Result |
+|:---|:---:|---|
+| `/auth/register`  | `POST`  | Registers a new user  |
+| `/auth/login`  | `POST`  | Login the user  |
+| `/auth/logout`  | `GET`  | User logout  |
+| `/auth/status`  | `GET`  | Returns the logged in user's status  |
+| `/auth/password_recovery`  | `POST`  | Creates a password_recovery_hash and sends email to user |
+| `/auth/password`  | `PUT`  | Reset user password  |
+| `/auth/password_change`  | `PUT`  | Changes user password  |
+| `/auth/facebook/login`  | `POST`  | Logs in user using fb_access_token returning the corresponding JWT. if user does not exist registers/creates a new one  |
+| `/auth/facebook/set_standalone_user`  | `PUT`  | Sets username and password to work directly on the system without facebook  |
+
+### Cell phone number validation
+
+| Endpoint | HTTP Method | Result |
+|:---|:---:|---|
+| `/cellphone`  | `POST`  | Generates cellphone_validation_code, idempotent (could be used for resend cellphone_validation_code) allows just 1 user per cellphone validation! |
+| `/cellphone/verify` | `PUT` | Verifies cellphone_validation_code, idempotent (could be used many times) |
+
+### Devices (Push notifications support)
+
+| Endpoint | HTTP Method | Result |
+|:---|:---:|---|
+| `/devices`  | `POST`  | Creates or updates the device in the system |
+| `/devices/<device_id>` | `PUT` | creates/updates and associates the device device_id to the user logged_in_user_id |
+
+### Email validation
+
+|Endpoint| HTTP Method | Result |
+|:---|:---:|---|
+| `/email_verification`  | `PUT`  | Creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend) |
+| `/email_verification/<token>` | `GET` | Sets email verified date |
