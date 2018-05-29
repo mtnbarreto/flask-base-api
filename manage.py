@@ -5,7 +5,6 @@ import coverage
 import urllib.parse
 
 from flask.cli import FlaskGroup
-from flask_script import Manager
 from flask_migrate import MigrateCommand
 
 from project import app, db
@@ -25,11 +24,7 @@ COV = coverage.coverage(
 )
 COV.start()
 
-manager = Manager(app)
-manager.add_command('db', MigrateCommand)
-
-
-@manager.command
+@cli.command
 def test():
     """Runs the tests without code coverage."""
     tests = unittest.TestLoader().discover('tests', pattern='test_*.py')
@@ -69,7 +64,7 @@ def seed_db():
     db.session.commit()
 
 
-@manager.command
+@cli.command
 def cov():
     """Runs the unit tests with coverage."""
     tests = unittest.TestLoader().discover('tests')
@@ -87,6 +82,3 @@ def cov():
 
 if __name__ == '__main__':
     cli()
-
-if __name__ == '__main__':
-    manager.run()

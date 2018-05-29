@@ -18,6 +18,7 @@ Features:
 
 * [Quick start guide](#quick-start-guide)
   + [Requirements](#requirements)
+* [Commands](#commands)
 * [Dependencies](#dependencies)
 * [RESTful endpoints](#restful-endpoints)
 
@@ -95,11 +96,16 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 |`docker-compose run flask-base-service flask routes`| Show the routes for the app |
 |`docker-compose run flask-base-service flask shell`| Runs a shell in the app context |
 
+### DB Creation
+
+| Command | Result |
+|:---|---|
+|||
+
 ### DB Migrations
 
 | Command | Result |
 |:---|---|
-||
 |`docker-compose run flask-base-service flask db [OPTIONS] COMMAND [ARGS]...`| Perform database migrations. |
 
 | COMMAND | Result |
