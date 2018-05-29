@@ -12,6 +12,7 @@ Features:
 * RESTful API documentation via Swagger.
 * Easily visualize and consume RESTful API via Swagger UI.
 * RabbitMQ message broker and RabbitMQ management plugin integration.
+* Easily supports for multiple RESTful API versions.
 
 
 ## Contents
@@ -89,6 +90,15 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 
 ## Commands
 
+### Debugging
+
+| Command | Result |
+|:---|---|
+|`docker-compose logs`|Show logs of all docker-compose related containers.|
+|`docker exec -ti $(docker ps -aqf "name=flask-base-db") psql -U postgres`|Run psql.|
+
+
+
 ### Base commands
 
 | Command | Result |
@@ -100,12 +110,15 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 
 | Command | Result |
 |:---|---|
-|||
+|`docker-compose run flask-base-service python manage.py recreate_db|Recreates all databases. Developing, testing and production|
+
+> Development, Testing and Production db are automatically created when db container runs so the first time we run the app we don't need to recreate the db.
 
 ### DB Migrations
 
 | Command | Result |
 |:---|---|
+|`docker-compose run flask-base-service python manage.py recreate_db`|
 |`docker-compose run flask-base-service flask db [OPTIONS] COMMAND [ARGS]...`| Perform database migrations. |
 
 | COMMAND | Result |
@@ -121,26 +134,17 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 |`migrate [OPTIONS]`  |Autogenerate a new revision file (Alias for `revision --autogenerate`)|
 |`revision [OPTIONS]`  |Create a new revision file.|
 |`show [OPTIONS] [REVISION]`  |Show the revision denoted by the given symbol|
-|`stamp [OPTIONS] [REVISION]`  |'stamp' the revision table with the given  revision; don't run any
-  migrations|
-|`upgrade [OPTIONS] [REVISION]`  |Upgrade to a later version|
+|`stamp [OPTIONS] [REVISION]`  |'stamp' the revision table with the given  revision; don't run any migrations|
+|`upgrade [OPTIONS] [REVISION]` |Upgrade to a later version|
 
 > you can see all DB migration commands documentation by executing `docker-compose run flask-base-service flask db --help`
 > For a particular command documentation you can execute `docker-compose run flask-base-service flask db [COMMAND] --help`
 
+### Run Tests
 
-### How to recreate the database
-
-There is a command already implemented in the RESTful API. To run the command we should invoke it through `flask-base-service` container as the following command shows. Basically the commands runs `python manage.py recreate_db` in `flask-base-service` container.
-
-```bash
-docker-compose run flask-base-service python manage.py recreate_db
-```
-
-> Development, Testing and Production db are automatically created when db container runs so the first time we run the app we don't need to recreate the db.
-
-#### How to run tests
-
+| Command | Result |
+|:---|---|
+|`docker-compose run flask-base-service python manage.py test`|Run integration tests|
 
 
 ## Dependencies
@@ -179,6 +183,8 @@ docker-compose run flask-base-service python manage.py recreate_db
 | `/auth/password_change`  | `PUT`  | Changes user password  |
 | `/auth/facebook/login`  | `POST`  | Logs in user using fb_access_token returning the corresponding JWT. if user does not exist registers/creates a new one  |
 | `/auth/facebook/set_standalone_user`  | `PUT`  | Sets username and password to work directly on the system without facebook  |
+
+> Endpoints implementation can be found under [/project/api/v1/auth.py](project/api/v1/auth.py). 
 
 ### Cell phone number validation
 

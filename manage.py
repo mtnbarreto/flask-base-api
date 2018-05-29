@@ -24,7 +24,7 @@ COV = coverage.coverage(
 )
 COV.start()
 
-@cli.command
+@cli.command()
 def test():
     """Runs the tests without code coverage."""
     tests = unittest.TestLoader().discover('tests', pattern='test_*.py')
