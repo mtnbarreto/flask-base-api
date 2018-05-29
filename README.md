@@ -90,43 +90,37 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 
 ### Base commands
 
-#### Show the routes for the app
+| Command | Result |
+|:---|---|
+|`docker-compose run flask-base-service flask routes`| Show the routes for the app |
+|`docker-compose run flask-base-service flask shell`| Runs a shell in the app context |
 
-```bash
-docker-compose run flask-base-service flask routes
-```
+### DB Migrations
 
-#### Runs a shell in the app context
+| Command | Result |
+|:---|---|
+||
+|`docker-compose run flask-base-service flask db [OPTIONS] COMMAND [ARGS]...`| Perform database migrations. |
 
-```bash
-docker-compose run flask-base-service flask shell
-```
+| COMMAND | Result |
+|:---|---|
+|`branches [OPTIONS]`  |Show current branch points.|
+|`current [OPTIONS]`  |Display the current revision for each database.|
+|`downgrade [OPTIONS] [REVISION]`  |Revert to a previous version.|
+|`edit [OPTIONS] [REVISION]`  |Edit a revision file.|
+|`heads [OPTIONS]`  |Show current available heads in the script directory.|
+|`history [OPTIONS]`  |List changeset scripts in chronological order.|
+|`init  [OPTIONS]`  |Creates a new migration repository.|
+|`merge [OPTIONS] [REVISIONS]...`  |Merge two revisions together, creating a new revision file|
+|`migrate [OPTIONS]`  |Autogenerate a new revision file (Alias for `revision --autogenerate`)|
+|`revision [OPTIONS]`  |Create a new revision file.|
+|`show [OPTIONS] [REVISION]`  |Show the revision denoted by the given symbol|
+|`stamp [OPTIONS] [REVISION]`  |'stamp' the revision table with the given  revision; don't run any
+  migrations|
+|`upgrade [OPTIONS] [REVISION]`  |Upgrade to a later version|
 
-### Migrations
-
-#### Perform database migrations
-
-```bash
-docker-compose run flask-base-service db [OPTIONS] COMMAND [ARGS]...
-```
-
-> docker-compose run flask-base-service flask db --help
-
-```bash
-Commands:
-  branches   Show current branch points
-  current    Display the current revision for each...
-  downgrade  Revert to a previous version
-  edit       Edit a revision file
-  heads      Show current available heads in the script...
-  history    List changeset scripts in chronological...
-  init       Creates a new migration repository.
-  merge      Merge two revisions together, creating a new...
-  migrate    Autogenerate a new revision file (Alias for...
-  revision   Create a new revision file.
-  show       Show the revision denoted by the given...
-  stamp      'stamp' the revision table with the given...
-```
+> you can see all DB migration commands documentation by executing `docker-compose run flask-base-service flask db --help`
+> For a particular command documentation you can execute `docker-compose run flask-base-service flask db [COMMAND] --help`
 
 
 ### How to recreate the database
@@ -140,8 +134,6 @@ docker-compose run flask-base-service python manage.py recreate_db
 > Development, Testing and Production db are automatically created when db container runs so the first time we run the app we don't need to recreate the db.
 
 #### How to run tests
-
-
 
 
 
