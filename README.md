@@ -184,7 +184,7 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 | `/auth/facebook/login`  | `POST`  | Logs in user using fb_access_token returning the corresponding JWT. if user does not exist registers/creates a new one  |
 | `/auth/facebook/set_standalone_user`  | `PUT`  | Sets username and password to work directly on the system without facebook  |
 
-> Endpoints implementation can be found under [/project/api/v1/auth.py](project/api/v1/auth.py). 
+> Endpoints implementation can be found under [/project/api/v1/auth.py](project/api/v1/auth.py).
 
 ### Cell phone number validation
 
@@ -193,6 +193,8 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 | `/cellphone`  | `POST`  | Generates cellphone_validation_code, idempotent (could be used for resend cellphone_validation_code) allows just 1 user per cellphone validation! |
 | `/cellphone/verify` | `PUT` | Verifies cellphone_validation_code, idempotent (could be used many times) |
 
+> Endpoints implementation can be found under [/project/api/v1/phone_validation.py](project/api/v1/phone_validation.py).
+
 ### Devices (Push notifications support)
 
 | Endpoint | HTTP Method | Result |
@@ -200,9 +202,18 @@ swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0
 | `/devices`  | `POST`  | Creates or updates the device in the system |
 | `/devices/<device_id>` | `PUT` | creates/updates and associates the device device_id to the user logged_in_user_id |
 
+> Endpoints implementation can be found under [/project/api/v1/devices.py](project/api/v1/devices.py).
+
 ### Email validation
 
 |Endpoint| HTTP Method | Result |
 |:---|:---:|---|
 | `/email_verification`  | `PUT`  | Creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend) |
 | `/email_verification/<token>` | `GET` | Sets email verified date |
+
+> Endpoints implementation can be found under [/project/api/v1/email_validation.py](project/api/v1/email_validation.py).
+
+
+## FAQ
+
+### How do I add a new API endpoint version..?
