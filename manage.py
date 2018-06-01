@@ -64,7 +64,7 @@ def seed_db():
     db.session.commit()
 
 
-@cli.command
+@cli.command()
 def cov():
     """Runs the unit tests with coverage."""
     tests = unittest.TestLoader().discover('tests')
