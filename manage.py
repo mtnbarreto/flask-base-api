@@ -33,7 +33,7 @@ def test():
         return 0
     return 1
 
-@cli.command()
+@cli.command('recreate_db')
 def recreate_db():
     """Recreates a database."""
     db.reflect()
@@ -42,7 +42,7 @@ def recreate_db():
     db.session.commit()
 
 
-@cli.command()
+@cli.command('seed_db')
 def seed_db():
     """Seeds the database."""
     event_desc = EventDescriptor(id=1, name="Seed Events Name", description="Seed db Event from {1}")
