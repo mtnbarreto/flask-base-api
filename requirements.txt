@@ -22,7 +22,7 @@ pyjwt==1.7.1
 celery==4.4.2
 redis==3.4.1
 twilio==6.37.0
-flask-cors==3.0.8
+flask-cors==3.0.9
 raven==6.10.0
 facepy==1.0.11
 pyfcm==1.4.7
