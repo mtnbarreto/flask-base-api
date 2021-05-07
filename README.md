@@ -217,19 +217,19 @@ flask_base_dev=#
 
 ## Dependencies
 
-* Python v3.6.5
+* Python v3.8.2
 * Docker v18.03.1-ce
 * Docker Compose v1.21.1
 * Docker Machine v0.14.0
 * Docker Compose file v3.6
-* Flask v1.0.2
-* Flask-SQLAlchemy v2.3.2
-* Flask-Testing v0.7.1
-* psycopg2 v2.7.3.2
-* Gunicorn v19.7.1
+* Flask v1.1.1
+* Flask-SQLAlchemy v2.4.1
+* Flask-Testing v0.8.1
+* psycopg2 v2.8.4
+* Gunicorn v20.0.4
 * Nginx v1.13.8
-* Bootstrap 4.0.0
-* Twilio 6.8.0
+* Bootstrap 6.0.0
+* Twilio 6.37.0
 
 ## RESTful endpoints
 

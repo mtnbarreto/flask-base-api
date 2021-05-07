@@ -12,7 +12,7 @@ def send_password_recovery_email(user, token):
                                              html_body=render_template("auth/password_recovery_user.html", user=user, href=href))
 
 def send_registration_email(user, token):
-    href = request.url_root + url_for('auth.verify_email', token='')[1:] + token
+    href = request.url_root + url_for('email_validation.verify_email', token='')[1:] + token
     send_async_registration_email.delay(subject="Welcome by Flask Base Api! %s" % user.username,
                                         recipient=user.email,
                                         text_body=render_template("auth/welcome_new_user.txt", user=user),

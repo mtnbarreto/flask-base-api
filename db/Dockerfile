@@ -1,4 +1,4 @@
-FROM postgres:10.0
+FROM postgres:12.2
 
 
 
