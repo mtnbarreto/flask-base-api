@@ -5,7 +5,6 @@ import coverage
 import urllib.parse
 
 from flask.cli import FlaskGroup
-from flask_migrate import MigrateCommand
 
 from project import app, db
 from project.models.user import User
