@@ -2,12 +2,13 @@
 
 import datetime
 
-from project import db, app
+from project import app
+from project.extensions import bcrypt, db
 from project.models.user import User, UserRole
 from project.models.device import Device
 from project.models.group import Group
 from project.models.user_group_association import UserGroupAssociation
-from project import bcrypt
+
 
 
 def add_user(username: str, email: str, password: str, cellphone_number: str=None, cellphone_cc: str=None,

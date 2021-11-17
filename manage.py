@@ -6,7 +6,8 @@ import urllib.parse
 
 from flask.cli import FlaskGroup
 
-from project import app, db
+from project import app
+from project.extensions import db
 from project.models.user import User
 from project.models.event_descriptor import EventDescriptor
 from project.models.group import Group
@@ -38,6 +39,32 @@ def recreate_db():
     db.reflect()
     db.drop_all()
     db.create_all()
+    db.session.commit()
+
+
+@cli.command('recreate_test_db')
+def recreate_test_db():
+    """Recreates testing database."""
+    app.config.from_object('project.config.TestingConfig')
+    db.reflect()
+    db.drop_all()
+    db.create_all()
+    db.session.commit()
+
+
+@cli.command('drop_test_db')
+def drop_db():
+    """Drop testing database."""
+    app.config.from_object('project.config.TestingConfig')
+    db.reflect()
+    db.drop_all()
+    db.session.commit()
+
+@cli.command('drop_db')
+def drop_db():
+    """Drop a database."""
+    db.reflect()
+    db.drop_all()
     db.session.commit()
 
 

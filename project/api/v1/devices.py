@@ -8,7 +8,7 @@ from project.models.device import Device
 from project.models.user import User
 from project.api.common.utils.decorators import authenticate
 from project.api.common.utils.helpers import session_scope
-from project import db
+from project.extensions import db
 
 devices_blueprint = Blueprint('devices', __name__, template_folder='../templates/devices')
 

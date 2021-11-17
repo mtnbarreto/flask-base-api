@@ -3,7 +3,8 @@
 import os
 os.environ["APP_SETTINGS"] = "project.config.TestingConfig"
 from flask_testing import TestCase
-from project import app, db
+from project import app
+from project.extensions import db
 
 class BaseTestCase(TestCase):
     def create_app(self):

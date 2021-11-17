@@ -1,7 +1,7 @@
 # project/models/device.py
 
 from datetime import datetime
-from project import db
+from project.extensions import db
 from project.models.user import User
 from project.models.group import Group
 from typing import List
@@ -64,3 +64,4 @@ class Device(db.Model):
     def first(*criterion):
         """Get first db entity that match to criterium"""
         return Device.query.filter(*criterion)
+

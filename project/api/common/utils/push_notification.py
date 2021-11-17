@@ -1,6 +1,7 @@
 # project/api/common/utils/push_notifications.py
 
-from project import db, app
+from project import app
+from project.extensions import db
 from project.models.event import Event
 from project.models.user import User
 from project.models.device import Device
