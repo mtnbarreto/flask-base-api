@@ -5,7 +5,7 @@ from sqlalchemy import exc, or_
 from flask_accept import accept
 
 from project.models.user import User, UserRole
-from project import db
+from project.extensions import db
 from project.api.common.utils.decorators import authenticate, privileges
 from project.api.common.utils.exceptions import NotFoundException, BusinessException, InvalidPayload
 

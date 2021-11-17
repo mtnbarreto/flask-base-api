@@ -2,7 +2,7 @@
 
 from sqlalchemy.exc import IntegrityError
 
-from project import db
+from project.extensions import db
 from project.models.user import User
 from tests.base import BaseTestCase
 from tests.utils import add_user
@@ -48,11 +48,11 @@ class TestUserModel(BaseTestCase):
     def test_encode_auth_token(self):
         user = add_user('justatest', 'test@test.com', 'test')
         auth_token = user.encode_auth_token()
-        self.assertTrue(isinstance(auth_token, bytes))
+        self.assertTrue(isinstance(auth_token, str))
 
 
     def test_decode_auth_token(self):
         user = add_user('justatest', 'test@test.com', 'test')
         auth_token = user.encode_auth_token()
-        self.assertTrue(isinstance(auth_token, bytes))
+        self.assertTrue(isinstance(auth_token, str))
         self.assertTrue(User.decode_auth_token(auth_token), user.id)

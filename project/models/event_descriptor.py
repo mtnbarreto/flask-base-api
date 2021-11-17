@@ -1,8 +1,7 @@
 # project/models/event_descriptor.py
 
-
 from datetime import datetime
-from project import db
+from project.extensions import db
 
 class EventDescriptor(db.Model):
     __tablename__ = "event_descriptors"

@@ -4,7 +4,7 @@ import jwt
 from enum import IntFlag
 from datetime import datetime, timedelta
 from flask import current_app
-from project import db, bcrypt
+from project.extensions import db, bcrypt
 from sqlalchemy.ext.associationproxy import association_proxy
 from random import randint
 from typing import Tuple, Optional
@@ -61,6 +61,9 @@ class User(db.Model):
         self.cellphone_validation_date = cellphone_validation_date
         self.roles = roles.value
 
+    def __repr__(self):
+        return '<User %r>' % self.username
+
     @staticmethod
     def first_by(**kwargs):
         """Get first db entity that match to criterium"""
@@ -96,7 +99,7 @@ class User(db.Model):
     def decode_auth_token(auth_token: str) -> int:
         """Decodes the auth token - :param auth_token: - :return: integer|string"""
         try:
-            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'))
+            payload = jwt.decode(auth_token, current_app.config.get('SECRET_KEY'), algorithms=["HS256"])
             return payload['sub']
         except jwt.ExpiredSignatureError:
             raise UnauthorizedException(message='Signature expired. Please log in again.')
@@ -122,7 +125,7 @@ class User(db.Model):
     def decode_password_token(pass_token: str) -> int:
         """Decodes the auth token - :param auth_token: - :return: integer|string"""
         try:
-            payload = jwt.decode(pass_token, current_app.config.get('SECRET_KEY'))
+            payload = jwt.decode(pass_token, current_app.config.get('SECRET_KEY'), algorithms=["HS256"])
             return payload['sub']
         except jwt.ExpiredSignatureError:
             raise BusinessException(message='Password recovery token expired. Please try again.')
@@ -132,14 +135,14 @@ class User(db.Model):
     @staticmethod
     def generate_cellphone_validation_code() -> Tuple[str, datetime]:
         """Generates cell phone number validation code and expiration time"""
-        return str(randint(1000, 9999)), datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
+        return str(randint(1000, 9999)), datetime.utcnow() + timedelta(seconds=int(current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS']))
 
     def verify_cellphone_validation_code(self, code: str) -> Tuple[bool, Optional[str]]:
         """Validates that code matches with user.cellphone_validation_code and its not expired"""
         if not self.cellphone_validation_code or self.cellphone_validation_code != code:
             return False, 'Invalid validation code. Please try again.'
 
-        delta = datetime.utcnow() + timedelta(seconds=current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS'])
+        delta = datetime.utcnow() + timedelta(seconds=int(current_app.config['CELLPHONE_VALIDATION_CODE_EXP_SECS']))
         if not self.cellphone_validation_code_expiration or self.cellphone_validation_code_expiration > delta:
             return False, 'Validation expired. Please try again.'
 
@@ -164,7 +167,7 @@ class User(db.Model):
     def decode_email_token(email_token: str) -> int:
         """Decodes the auth token - :param auth_token: - :return: integer|string"""
         try:
-            payload = jwt.decode(email_token, current_app.config.get('SECRET_KEY'))
+            payload = jwt.decode(email_token, current_app.config.get('SECRET_KEY'), algorithms=["HS256"])
             return payload['sub']
         except jwt.ExpiredSignatureError:
             raise BusinessException(message='Email recovery token expired. Please try again.')

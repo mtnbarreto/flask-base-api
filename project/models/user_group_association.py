@@ -1,7 +1,7 @@
 # project/models/user_group_association.py
 
 from datetime import datetime
-from project import db
+from project.extensions import db
 from project.models.user import User
 from project.models.group import Group
 

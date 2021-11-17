@@ -48,7 +48,7 @@ For mac os follow this guide to install them: https://docs.docker.com/docker-for
 ```bash
   git clone git@github.com:mtnbarreto/flask-base-api.git
   git clone git@github.com:mtnbarreto/flask-base-main.git
-  git clone git@github.com:mtnbarreto/base-swagger.git
+  git clone git@github.com:mtnbarreto/flask-base-swagger.git
 ```
 
 3 - Move to `flask-base-main`.
@@ -227,7 +227,9 @@ flask_base_dev=#
 * Flask-Testing v0.8.1
 * psycopg2 v2.9.1
 * Gunicorn v20.1.0
-* Nginx v1.13.8
+* Nginx v1.21.8
+* Rabittmq v3.9.5
+* redis 6.2.5
 * Twilio 6.63.1
 
 ## RESTful endpoints

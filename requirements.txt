@@ -6,13 +6,13 @@ gunicorn==20.1.0
 Flask-Migrate==3.1.0
 Flask-Mail==0.9.1
 alembic==1.7.1
-click==8.0.1
+click==7.1.2
 SQLAlchemy==1.4.23
 itsdangerous==2.0.1
 Jinja2==3.0.1                  # A very fast and expressive template engine.
 Mako==1.1.5                    # A super-fast templating language that borrows the best ideas from the existing templating languages. https://pypi.org/project/Mako/
 MarkupSafe==2.0.1              # Safely add untrusted strings to HTML/XML markup.
-psycopg2==2.9.1                # psycopg2 - Python-PostgreSQL Database Adapte
+psycopg2-binary==2.9.1                # psycopg2 - Python-PostgreSQL Database Adapte
 python-dateutil==2.8.2         # Extensions to the standard Python datetime module
 python-editor==1.0.4           # Programmatically open an editor, capture the result.
 six==1.16.0                    # Python 2 and 3 compatibility utilities
@@ -21,7 +21,7 @@ flask-bcrypt==0.7.1            # Brcrypt hashing for Flask.
 pyjwt==2.1.0                   # JSON Web Token implementation in Python
 celery==5.1.2                  # Distributed Task Queue.
 redis==3.5.3                   # Python client for Redis key-value store
-twilio==6.63.1                 # Twilio API client and TwiML generator
+twilio==7.2.0                  # Twilio API client and TwiML generator
 flask-cors==3.0.10             # A Flask extension adding a decorator for CORS (Cross Origin Resource Sharing) support
 raven==6.10.0                  # Raven is a client for Sentry (https://getsentry.com)
 facepy==1.0.12                 # Facepy makes it really easy to use Facebook's Graph API

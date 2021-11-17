@@ -6,7 +6,7 @@ from facepy import GraphAPI
 from flask_accept import accept
 from datetime import datetime
 
-from project import bcrypt, db
+from project.extensions import bcrypt, db
 from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnauthorizedException
 from project.api.common.utils.decorators import authenticate, privileges
 from project.models.user import User, UserRole
@@ -46,7 +46,7 @@ def register_user():
 
         if not current_app.testing:
             from project.api.common.utils.mails import send_registration_email
-            send_registration_email(new_user, token.decode())
+            send_registration_email(new_user, token)
 
         # save the device
         if all(x in request.headers for x in [Constants.HttpHeaders.DEVICE_ID, Constants.HttpHeaders.DEVICE_TYPE]):
@@ -59,7 +59,7 @@ def register_user():
         return {
             'status': 'success',
             'message': 'Successfully registered.',
-            'auth_token': auth_token.decode()
+            'auth_token': auth_token
         }, 201
     else:
         # user already registered, set False to device.active
@@ -96,7 +96,7 @@ def login_user():
         return {
             'status': 'success',
             'message': 'Successfully logged in.',
-            'auth_token': auth_token.decode()
+            'auth_token': auth_token
         }
     else:
         # user is not logged in, set False to device.active

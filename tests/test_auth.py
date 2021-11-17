@@ -1,7 +1,8 @@
 import json
 import time
+import unittest
 
-from project import db
+from project.extensions import db
 from project.models.user import User
 from project.api.common.utils.constants import Constants
 from tests.base import BaseTestCase
@@ -310,7 +311,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_password_reset_expired(self):
         user = add_user('justatest3', 'test@test.com', 'password')
-        token = user.encode_password_token().decode()
+        token = user.encode_password_token()
         user = set_user_token_hash(user, token)
         user_password_before = user.password
         time.sleep(3)
@@ -335,7 +336,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_password_reset_already_reset(self):
         user = add_user('justatest3', 'test@test.com', 'password')
-        token = user.encode_password_token().decode()
+        token = user.encode_password_token()
 
         user = set_user_token_hash(user, token)
 
@@ -433,7 +434,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_password_reset(self):
         user = add_user('justatest3', 'test@test.com3', 'password')
-        token = user.encode_password_token().decode()
+        token = user.encode_password_token()
 
         user = set_user_token_hash(user, token)
         user_password_before = user.password
@@ -625,7 +626,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_verify_email(self):
         user = add_user('justatest', 'test@test.com', 'password')
-        token = user.encode_email_token().decode()
+        token = user.encode_email_token()
         user = set_user_email_token_hash(user, token)
 
         with self.client:
@@ -715,4 +716,3 @@ class TestAuthBlueprint(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'error')
             self.assertEqual(data['message'], 'Invalid password. Please try again.')
-

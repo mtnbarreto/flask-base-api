@@ -11,16 +11,18 @@ from celery import Celery
 from raven.contrib.flask import Sentry
 from pyfcm import FCMNotification
 from project.api.common.base_definitions import BaseFlask
+from project.extensions import db, migrate, bcrypt, mail
+from project.models.user import User
+from project.models.event_descriptor import EventDescriptor
+from project.models.group import Group
+from project.models.user_group_association import UserGroupAssociation
+from project.models.device import Device
+from project.models.event import Event
+
 
 # flask config
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
 conf.from_object(os.getenv('APP_SETTINGS'))
-
-# instantiate the extensions
-db = SQLAlchemy()
-migrate = Migrate()
-bcrypt = Bcrypt()
-mail = Mail()
 
 sentry = None
 twilio_client = Client(conf['TWILIO_ACCOUNT_SID'], conf['TWILIO_AUTH_TOKEN'])
@@ -36,10 +38,7 @@ def create_app():
         sentry = Sentry(app, dsn=app.config['SENTRY_DSN'])
 
     # set up extensions
-    db.init_app(app)
-    bcrypt.init_app(app)
-    migrate.init_app(app, db)
-    mail.init_app(app)
+    setup_extensions(app)
 
     # register blueprints
     from project.api.v1.auth import auth_blueprint
@@ -65,6 +64,11 @@ def create_app():
     app.register_error_handler(Exception, error_handlers.handle_general_exception)
     return app
 
+def setup_extensions(app):
+    db.init_app(app)
+    bcrypt.init_app(app)
+    migrate.init_app(app, db)
+    mail.init_app(app)
 
 # noinspection PyPropertyAccess
 def make_celery(app):

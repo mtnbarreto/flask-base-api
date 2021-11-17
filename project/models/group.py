@@ -1,7 +1,7 @@
 # project/models/group.py
 
 from datetime import datetime
-from project import db
+from project.extensions import db
 from sqlalchemy.ext.associationproxy import association_proxy
 
 class Group(db.Model):

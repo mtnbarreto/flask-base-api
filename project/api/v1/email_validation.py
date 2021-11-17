@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint, request, current_app
 from flask_accept import accept
 
-from project import db, bcrypt
+from project.extensions import db, bcrypt
 from project.api.common.utils.exceptions import InvalidPayload, NotFoundException
 from project.api.common.utils.decorators import authenticate
 from project.models.user import User
