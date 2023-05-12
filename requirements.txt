@@ -16,7 +16,7 @@ psycopg2-binary==2.9.1                # psycopg2 - Python-PostgreSQL Database Ad
 python-dateutil==2.8.2         # Extensions to the standard Python datetime module
 python-editor==1.0.4           # Programmatically open an editor, capture the result.
 six==1.16.0                    # Python 2 and 3 compatibility utilities
-Werkzeug==2.0.1                # The comprehensive WSGI web application library.
+Werkzeug==2.2.3                # The comprehensive WSGI web application library.
 flask-bcrypt==0.7.1            # Brcrypt hashing for Flask.
 pyjwt==2.4.0                   # JSON Web Token implementation in Python
 celery==5.1.2                  # Distributed Task Queue.
