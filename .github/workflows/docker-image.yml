@@ -1,0 +1,67 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      APP_SETTINGS: project.config.DevelopmentConfig
+      SECRET_KEY: mysecret
+      MAIL_SERVER: smtp.googlemail.com
+      MAIL_PORT: 465
+      MAIL_USERNAME: my_email@my_email_domain.com
+      MAIL_PASSWORD: my_email_password
+      MAIL_DEFAULT_SENDER: my_email@my_email_domain.com
+      TWILIO_ACCOUNT_SID: 1234qwer
+      TWILIO_AUTH_TOKEN: qwer1234
+      TWILIO_FROM_NUMBER: +123456789
+      CELLPHONE_VALIDATION_CODE_EXP_SECS: 600
+      MAIL_USE_TLS: False
+      MAIL_USE_SSL: True
+      FCM_SERVER_KEY: 9876oiuy
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+      - name: Docker Compose Build
+        working-directory: ./flask-main
+        continue-on-error: false
+        run: docker-compose build
+      # - name: Cache multiple paths
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       flask-main/docker-compose.yml
+      #     key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+      - name: Docker Compose Up
+        working-directory: ./flask-main
+        continue-on-error: false
+        run: docker-compose up -d
+      - name: Docker Ps
+        run: docker ps
+      - name: Run Tests
+        working-directory: ./flask-main
+        continue-on-error: false
+        run: docker-compose exec -T flask-api python manage.py test
+      # - name: Run Tests using Script
+      #   working-directory: ./flask-main
+      #   shell: bash
+      #   continue-on-error: false
+      #   run: |
+      #     chmod +x "${GITHUB_WORKSPACE}/.github/scripts/script.sh"
+      #     "${GITHUB_WORKSPACE}/.github/scripts/script.sh"
