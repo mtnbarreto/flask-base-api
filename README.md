@@ -1,27 +1,25 @@
-[![Docker Image CI](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml)
+[![Docker Image CI](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml/badge.svg)](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml)
+
 # Flask Base API
 
-This repository aim to create a starting point to develop a REST API using Python and Flask framework as main technologies.
+This repository aims to create a starting point to develop a REST API using Python and Flask framework as main technologies.
 
-Features:
-
+**Features:**
 * Development environment with Docker that supports Test-Driven Development (TDD).
-* Staging, Testing, Production environments.
-* RESTful API powered by Python, Flask web framework, postgres DB, rabbitmq and other technologies.
+* Staging, Testing, and Production environments.
+* RESTful API powered by Python, Flask web framework, Postgres DB, rabbitmq, and other technologies.
 * Unit tests covering the REST API services.
 * Code coverage.
 * RESTful API documentation via Swagger.
 * Easily visualize and consume RESTful API via Swagger UI.
 * RabbitMQ message broker and RabbitMQ management plugin integration.
-* Easily supports for multiple RESTful API versions.
+* Supports RESTful API versioning.
 * JWT authentication.
 * Facebook login.
-* Google login.
 * Firebase Cloud Messaging integration to send push notifications.
 * SQLAlchemy ORM integration and modeling of base db entities.
 * pgAdmin db administration and development platform for PostgreSQL.
-* nginx reverse proxy and load balancer. 
-
+* Nginx reverse proxy and load balancer.
 ## Contents
 
 * [Quick start guide](#quick-start-guide)
