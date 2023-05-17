@@ -1,0 +1,20 @@
+FROM python:3.11.3-slim as base
+
+# set working directory
+# RUN mkdir -p /usr/src/app
+WORKDIR /app
+
+# Keeps Python from generating .pyc files in the container
+ENV PYTHONDONTWRITEBYTECODE 1
+# Turns off buffering for easier container logging
+ENV PYTHONUNBUFFERED 1
+
+ENV FLASK_APP=project/__init__.py
+
+# add requirements (to leverage Docker cache)
+COPY requirements.txt .
+# install requirements
+RUN pip install -r requirements.txt
+
+# copy project
+COPY . .

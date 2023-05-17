@@ -1,0 +1,148 @@
+version: '3.8'
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+    ports:
+      - "5675:5672"  # we forward this port because it's useful for debugging
+      - "15675:15672"  # here, we can access rabbitmq management plugin
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq/data/
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+      - RABBITMQ_DEFAULT_VHOST=rabbitmq_dev
+  redis:
+    container_name: redis
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    ports:
+      - 6375:6379
+    volumes:
+      - redis-data:/var/lib/redis/data/
+  postgres-db:
+    container_name: postgres-db
+    build:
+      context: ../flask-api/db
+      dockerfile: Dockerfile
+    ports:
+      - 5435:5432  # expose ports - HOST:CONTAINER
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-db-data:/var/lib/postgresql/data/
+    healthcheck:
+      test: exit 0
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:7.1
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 5050:80
+  flask-api:
+    container_name: flask-api
+    build:
+      context: ../flask-api
+      dockerfile: Dockerfile
+      target: development # debug # set the dockerfile target as debug, development
+    ports:
+      - 5001:5000 # expose ports - HOST:CONTAINER
+      - 5678:5678 # debug port to connect with VSCode
+    volumes:
+      - '../flask-api:/app'
+    expose:
+      - 5000
+    environment:
+      - APP_SETTINGS=project.config.DevelopmentConfig
+      - FLASK_APP=project/__init__.py
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/db_dev
+      - DATABASE_TEST_URL=postgresql://postgres:postgres@postgres-db:5432/db_test
+      - CELERY_BROKER_URL=amqp://rabbitmq:rabbitmq@rabbitmq:5672/rabbitmq_dev
+      - CELERY_BROKER_TEST_URL=amqp://rabbitmq:rabbitmq@rabbitmq:5672/rabbitmq_test
+      #- CELERY_RESULT_BACKEND=redis://redis:redis@redis-db:6379
+      - SECRET_KEY=${SECRET_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USE_SSL=${MAIL_USE_SSL}
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+    depends_on:
+      - postgres-db
+    links:
+      - postgres-db
+      - rabbitmq
+      - redis
+  nginx:
+    container_name: nginx
+    build: ./nginx/
+    restart: always
+    ports:
+      - 80:80
+    depends_on:
+      - flask-api
+    links:
+      - flask-api
+  celery-worker:
+    container_name: celery-worker
+    build:
+      context: ./../
+      dockerfile: flask-main/celery/Dockerfile
+    links:
+      - rabbitmq
+      - redis
+    environment:
+      - APP_SETTINGS=project.config.DevelopmentConfig
+      - FLASK_DEBUG=1
+      - FLASK_APP=project/__init__.py
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-db:5432/db_dev
+      - DATABASE_TEST_URL=postgresql://postgres:postgres@postgres-db:5432/db_test
+      - CELERY_BROKER_URL=amqp://rabbitmq:rabbitmq@rabbitmq:5672/rabbitmq_dev
+      - CELERY_BROKER_TEST_URL=amqp://rabbitmq:rabbitmq@rabbitmq:5672/rabbitmq_test
+      #- CELERY_RESULT_BACKEND=redis://redis:redis@redis:6379
+      - SECRET_KEY=${SECRET_KEY}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USE_SSL=${MAIL_USE_SSL}
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+    depends_on:
+      - rabbitmq
+      - redis
+  swagger:
+    container_name: swagger
+    build:
+      dockerfile: Dockerfile
+      context: ./swagger
+    ports:
+      - '8080:8080' # expose ports - HOST:CONTAINER
+    environment:
+      - SWAGGER_JSON=swagger.yml
+    depends_on:
+      - flask-api
+    links:
+      - flask-api
+
+volumes:
+  redis-data:
+  postgres-db-data:
+  rabbitmq-data:

@@ -32,7 +32,7 @@ def register_user():
     if not password or not username or not email:
         raise InvalidPayload()
     # check for existing user
-    user = User.first(or_(User.username == username, User.email == email))
+    user = User.first(User.email == email)
     if not user:
         # add new user to db
         new_user = User(username=username, email=email, password=password)
@@ -59,7 +59,8 @@ def register_user():
         return {
             'status': 'success',
             'message': 'Successfully registered.',
-            'auth_token': auth_token
+            'auth_token': auth_token,
+            'username': new_user.username
         }, 201
     else:
         # user already registered, set False to device.active
@@ -96,7 +97,8 @@ def login_user():
         return {
             'status': 'success',
             'message': 'Successfully logged in.',
-            'auth_token': auth_token
+            'auth_token': auth_token,
+            'username': user.username,
         }
     else:
         # user is not logged in, set False to device.active
@@ -164,7 +166,7 @@ def password_recovery():
             user.token_hash = bcrypt.generate_password_hash(token, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         if not current_app.testing:
             from project.api.common.utils.mails import send_password_recovery_email
-            send_password_recovery_email(user, token.decode())  # send recovery email
+            send_password_recovery_email(user, token)  # send recovery email
         return {
             'status': 'success',
             'message': 'Successfully sent email with password recovery.',

@@ -24,6 +24,7 @@ class TestAuthBlueprint(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
+            self.assertEqual(data['username'], 'justatest')
             self.assertEqual(data['message'], 'Successfully registered.')
             self.assertTrue(data['auth_token'])
             self.assertEqual(response.content_type, 'application/json')
@@ -48,24 +49,24 @@ class TestAuthBlueprint(BaseTestCase):
                 'Sorry. That user already exists.', data['message'])
             self.assertIn('error', data['status'])
 
-    def test_user_registration_duplicate_username(self):
-        add_user('test', 'test@test.com', 'test')
-        with self.client:
-            response = self.client.post(
-                '/v1/auth/register',
-                data=json.dumps(dict(
-                    username='test',
-                    email='test@test.com2',
-                    password='test'
-                )),
-                content_type='application/json',
-                headers=[('Accept', 'application/json')]
-            )
-            data = json.loads(response.data.decode())
-            self.assertEqual(response.status_code, 400)
-            self.assertIn(
-                'Sorry. That user already exists.', data['message'])
-            self.assertIn('error', data['status'])
+    # def test_user_registration_duplicate_username(self):
+    #     add_user('test', 'test@test.com', 'test')
+    #     with self.client:
+    #         response = self.client.post(
+    #             '/v1/auth/register',
+    #             data=json.dumps(dict(
+    #                 username='test',
+    #                 email='test@test.com2',
+    #                 password='test'
+    #             )),
+    #             content_type='application/json',
+    #             headers=[('Accept', 'application/json')]
+    #         )
+    #         data = json.loads(response.data.decode())
+    #         self.assertEqual(response.status_code, 400)
+    #         self.assertIn(
+    #             'Sorry. That user already exists.', data['message'])
+    #         self.assertIn('error', data['status'])
 
     def test_user_registration_invalid_json(self):
         with self.client:
@@ -126,11 +127,11 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertIn('error', data['status'])
 
 
-    # Login tests
+    # # Login tests
 
     def test_registered_user_login(self):
         with self.client:
-            user = add_user('test', 'test@test.com', 'test')
+            user = add_user('test_username', 'test@test.com', 'test')
             response = self.client.post(
                 '/v1/auth/login',
                 data=json.dumps(dict(
@@ -144,6 +145,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successfully logged in.')
             self.assertTrue(data['auth_token'])
+            self.assertEqual(data['username'], 'test_username')
             self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 200)
 
@@ -408,7 +410,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['message'], 'Successfully sent email with password recovery.')
             self.assertEqual(response.status_code, 200)
 
-        user = User.query.filter_by(email='test@test.com1').first()
+        user = User.first_by(email='test@test.com1')
         user_token_hash1 = user.token_hash
         add_user('justatest2', 'test@test.com2', 'password')
 
@@ -557,7 +559,7 @@ class TestAuthBlueprint(BaseTestCase):
         # try to verify again
         with self.client:
             response = self.client.put(
-                '/v1/cellphone/verify',
+                '/v1/cellphone/verify', 
                 data=json.dumps(dict(
                     validation_code=user.cellphone_validation_code
                 )),

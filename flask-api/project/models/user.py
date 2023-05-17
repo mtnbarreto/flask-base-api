@@ -4,8 +4,10 @@ import jwt
 from enum import IntFlag
 from datetime import datetime, timedelta
 from flask import current_app
+from sqlalchemy.orm.query import Query
 from project.extensions import db, bcrypt
 from sqlalchemy.ext.associationproxy import association_proxy
+from flask_sqlalchemy import BaseQuery
 from random import randint
 from typing import Tuple, Optional
 from project.api.common.utils.exceptions import UnauthorizedException, BusinessException
@@ -22,7 +24,7 @@ class User(db.Model):
     last_name = db.Column(db.String(128))
     cellphone_number = db.Column(db.String(128))
     cellphone_cc = db.Column(db.String(16))  # cellphone_country_code
-    username = db.Column(db.String(128), unique=True, nullable=False)
+    username = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     roles = db.Column(db.Integer, default=UserRole.USER.value, nullable=False)
@@ -35,6 +37,15 @@ class User(db.Model):
     cellphone_validation_code = db.Column(db.String(4))
     cellphone_validation_code_expiration = db.Column(db.DateTime, nullable=True)
     cellphone_validation_date = db.Column(db.DateTime, nullable=True)
+    
+    refer_to_friend_link = db.Column(db.String)
+    instagram_link = db.Column(db.String, nullable=True)
+    shopify_link = db.Column(db.String, nullable=True)
+    pinterest_link = db.Column(db.String, nullable=True)
+    tiktok_link = db.Column(db.String, nullable=True)
+    website_url = db.Column(db.String, nullable=True)
+    company_name = db.Column(db.String, nullable=True)
+
     associated_groups = db.relationship("UserGroupAssociation", back_populates="user")
     groups = association_proxy('associated_groups', 'group')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

@@ -1,13 +1,14 @@
+[![Docker Image CI](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/mtnbarreto/flask-base-api/actions/workflows/docker-image.yml)
 # Flask Base API
 
-This repository is part of a series of repositories that aim to create a starting point to develop a REST API using Python and Flask as main technologies.
+This repository aim to create a starting point to develop a REST API using Python and Flask framework as main technologies.
 
 Features:
 
 * Development environment with Docker that supports Test-Driven Development (TDD).
 * Staging, Testing, Production environments.
 * RESTful API powered by Python, Flask web framework, postgres DB, rabbitmq and other technologies.
-* Unit tests covering each of the REST API services.
+* Unit tests covering the REST API services.
 * Code coverage.
 * RESTful API documentation via Swagger.
 * Easily visualize and consume RESTful API via Swagger UI.
@@ -15,8 +16,11 @@ Features:
 * Easily supports for multiple RESTful API versions.
 * JWT authentication.
 * Facebook login.
+* Google login.
 * Firebase Cloud Messaging integration to send push notifications.
 * SQLAlchemy ORM integration and modeling of base db entities.
+* pgAdmin db administration and development platform for PostgreSQL.
+* nginx reverse proxy and load balancer. 
 
 ## Contents
 
@@ -28,34 +32,21 @@ Features:
 
 ## Quick start guide
 
-#### Requirements
-
-* Docker
-* Docker Compose
-* Docker Machine
-
-For mac os follow this guide to install them: https://docs.docker.com/docker-for-mac/install/
-
-
-1 - Create a folder to clone all projects.
+ 
+#### 1 - Create a folder to clone all projects.
 
 ```bash
   mkdir <my_folder> && cd <myfolder>
 ```
 
-2 - Clone all the projects from <myfolder> folder.
+#### 2 - Clone the project from <myfolder> folder.
 
 ```bash
   git clone git@github.com:mtnbarreto/flask-base-api.git
-  git clone git@github.com:mtnbarreto/flask-base-main.git
-  git clone git@github.com:mtnbarreto/flask-base-swagger.git
 ```
 
-3 - Move to `flask-base-main`.
 
-```bash
-cd fask-base-main
-```
+#### 3 - Set up environment variables
 
 Before putting up and running the app containers we need to set up some environment variables which mostly are user services accounts like firebase and twilio. To do so create a file named `set_local_env_vars.sh` and add the following content replacing the values to it.
 
@@ -63,6 +54,7 @@ Before putting up and running the app containers we need to set up some environm
 #!/usr/bin/env bash
 
 export APP_SETTINGS="project.config.DevelopmentConfig"
+export FLASK_APP=project/__init__.py
 export SECRET_KEY="mysecret"
 export MAIL_SERVER="smtp.googlemail.com"
 export MAIL_PORT="465"
@@ -81,10 +73,16 @@ export FCM_SERVER_KEY="9876oiuy"
 To set up the env variables execute:
 
 ```bash
-source set_local_env_vars.sh
+source ../set_local_env_vars.sh
+```
+#### 4 - Move to `flask-main`.
+
+```bash
+cd flask-main
 ```
 
-Now let's build the images and run the containers.
+
+#### 5 - Now let's build the images and run the containers. `flask-base-api` requires docker 20.10.1 or newer. 
 
 ```bash
 docker-compose build --no-cache
@@ -94,54 +92,70 @@ docker-compose up -d
 > `docker-compose build` build the images. `--no-cache` arg indicates the cache should not be used. Docker caches the result of the build and use it in the subsequent builds. Remove this arg to build the images faster.
 > `docker-compose up` fires up the containers. The `-d` flag is used to run the containers in the background.
 
+`docker-compose up -d` should output something like ...
 
+```bash
+Creating network "flask-main_default" with the default driver
+Creating pgadmin       ... done
+Creating redis         ... done
+Creating postgres-db   ... done
+Creating rabbitmq      ... done
+Creating celery-worker ... done
+Creating flask-api     ... done
+Creating swagger       ... done
+Creating nginx         ... done
+```
 
-Now you can check swagger RESTful API documentation visiting http://localhost:8080.
-RESTful API is available under http://localhost:5001/v1. You can also use port 80 since nginx r
+After running the previous commands, let see the list of container by running:
 
-After running the previous commands you should be able to see all dockers containers of the app by:
-
-```bach
+```bash
 docker-compose ps
 ```
 
 ```bash
 Name                       Command                  State                                                 Ports                                           
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-celery-worker            /bin/sh -c celery -A proje ...   Up                                                                                                       
-flask-base-db            docker-entrypoint.sh postgres    Up (healthy)   0.0.0.0:5435->5432/tcp                                                                    
-flask-base-service       /bin/sh -c gunicorn -b 0.0 ...   Up             0.0.0.0:5001->5000/tcp                                                                    
-message-broker-service   docker-entrypoint.sh rabbi ...   Up             15671/tcp, 0.0.0.0:15675->15672/tcp, 25672/tcp, 4369/tcp, 5671/tcp, 0.0.0.0:5675->5672/tcp
-nginx                    nginx -g daemon off;             Up             0.0.0.0:80->80/tcp                                                                        
-redis-db                 docker-entrypoint.sh redis ...   Up             0.0.0.0:6375->6379/tcp                                                                    
-swagger                  sh /usr/share/nginx/docker ...   Up             0.0.0.0:8080->8080/tcp
+flask-api             /bin/sh -c bash -c 'while  ...   Up             0.0.0.0:5001->5000/tcp, 0.0.0.0:5678->5678/tcp                                                 
+celery-worker         /bin/sh -c celery -A proje ...   Up                                                                                                            
+postgres-db           docker-entrypoint.sh postgres    Up (healthy)   0.0.0.0:5435->5432/tcp                                                                         
+nginx                 /docker-entrypoint.sh ngin ...   Up             0.0.0.0:80->80/tcp                                                                             
+pgadmin               /entrypoint.sh                   Up             443/tcp, 0.0.0.0:5050->80/tcp                                                                  
+rabbitmq              docker-entrypoint.sh rabbi ...   Up             15671/tcp, 0.0.0.0:15675->15672/tcp, 15691/tcp, 15692/tcp, 25672/tcp, 4369/tcp, 5671/tcp,      
+                                                                      0.0.0.0:5675->5672/tcp                                                                         
+redis           docker-entrypoint.sh redis ...   Up             0.0.0.0:6375->6379/tcp                                                                         
+swagger         sh /usr/share/nginx/docker ...   Up             0.0.0.0:8080->8080/tcp 
 ```
 
-4 - Set up database
+Make sure all services started properly. `State` should be `Up`.  
+
+#### 6 - Set up database
 
 By running the following command we recreate all development db tables:
 
 ```bash
-docker-compose run flask-base-service python manage.py recreate_db
+docker-compose exec flask-api python manage.py recreate_db
 ```
 
-then you can populate the db with some development useful data:
+then you can populate the db by executing the following command:
 
 ```bash
-docker-compose run flask-base-service python manage.py seed_db
+docker-compose exec flask-api python manage.py seed_db
 ```
 
-Finally test that everything works by executing the following curl command that tries to logged in using a default usr created in the seed_db command:
+Finally test that everything works by executing the following curl command that tries to logged in using a user created by the seed_db command:
 
 ```bash
-curl -X POST "http://0.0.0.0:5001/v1/auth/login" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"email\":\"a@a.com\",\"password\":\"password\"}"
+curl -X POST "http://0.0.0.0/v1/auth/login" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"email\":\"a@a.com\",\"password\":\"password\"}"
 ```
-> you should see something like this..
-```bash
+
+it should output something like this:
+
+```json
 {
-  "auth_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MzAzODEzMTUsImlhdCI6MTUyNzc4OTMxNSwic3ViIjoxfQ.Dzf017g5Qf9Mi24AH-0X3womGW2koTY3c3cCO5p1djE",
-  "message": "Successfully logged in.",
-  "status": "success"
+  "status":"success",
+  "message":"Successfully logged in.",
+  "auth_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODY2NzU2MzMsImlhdCI6MTY4NDA4MzYzMywic3ViIjoxfQ.t8QKjoNfP3GuCLpCLVW-sPeEynHtX8Vk7DaOfVn0tWU",
+  "username":"martin"
 }
 ```
 
@@ -151,43 +165,46 @@ curl -X POST "http://0.0.0.0:5001/v1/auth/login" -H "accept: application/json" -
 
 | Command | Result |
 |:---|---|
-|`docker-compose logs`| Show logs of all docker-compose related containers.|
-|`docker exec -ti flask-base-db psql -U postgres`| Run psql.|
-|`docker-compose exec <container_name> bash`| Run bash in container_name container. See example below..|
+|`docker-compose logs`| Shows logs of all docker-compose related containers.|
+|`docker exec -ti postgres-db psql -U postgres`| Runs psql.|
+|`docker-compose exec <container_name> bash`| Runs bash in container_name container. See example below.|
 
-> `docker-compose logs -f <container_name>` shows only the logs of the <container_name> container. For example `docker-compose logs -f flask-base-service` shows flask web service logs while `docker-compose logs -f flask-base-db` shows  postgresSQL db container logs.
+> `docker-compose logs -f <container_name>` shows only the logs of the <container_name> container. For example `docker-compose logs -f flask-api` shows flask web service logs while `docker-compose logs -f postgres-db` shows  postgresSQL db container logs.
 
 ```bash
-barreto$ docker-compose exec flask-base-db bash
+barreto$ docker-compose exec postgres-db bash
 root@ceeb60f9aea8:/# psql -U postgres
 psql (10.0)
 Type "help" for help.
 
-postgres=# \c flask_base_dev
-You are now connected to database "flask_base_dev" as user "postgres".
+postgres=# \c db_dev
+You are now connected to database "db_dev" as user "postgres".
 
-flask_base_dev=#
+db_dev=#
 ```
+
+
 
 ### Base commands
 
 | Command | Result |
 |:---|---|
-| `docker-compose run flask-base-service flask routes` | Show the routes for the app |
-| `docker-compose run flask-base-service flask shell` | Runs a shell in the app context |
+| `docker-compose exec flask-api flask routes` | Shows the app's endpoints list |
+| `docker-compose exec flask-api flask shell` | Runs a shell in the app context |
 
 ### DB Creation
 
 | Command | Result |
 |:---|---|
-| `docker-compose run flask-base-service python manage.py recreate_db` | Recreates database by dropping and creating tables.|
-| `docker-compose run flask-base-service python manage.py seed_db` | Seeds the database |
+| `docker-compose exec flask-api python manage.py recreate_db` | Recreates database by dropping and creating tables.|
+| `docker-compose exec flask-api python manage.py seed_db` | Seeds the database |
+
 
 ### DB Migrations
 
 | Command | Result |
 |:---|---|
-|`docker-compose run flask-base-service flask db [OPTIONS] COMMAND [ARGS]...`| Perform database migrations. |
+|`docker-compose exec flask-api flask db [OPTIONS] COMMAND [ARGS]...`| Perform database migrations. |
 
 | COMMAND | Result |
 |:---|---|
@@ -205,34 +222,63 @@ flask_base_dev=#
 |`stamp [OPTIONS] [REVISION]`  |'stamp' the revision table with the given  revision; don't run any migrations|
 |`upgrade [OPTIONS] [REVISION]` |Upgrade to a later version|
 
-> you can see all DB migration commands documentation by executing `docker-compose run flask-base-service flask db --help`
-> For a particular command documentation you can execute `docker-compose run flask-base-service flask db [COMMAND] --help`
+> you can see all DB migration commands documentation by executing `docker-compose run flask-api flask db --help`
+> For a particular command documentation you can execute `docker-compose run flask-api flask db [COMMAND] --help`
 
 ### Run Tests
 
 | Command | Result |
 |:---|---|
-|`docker-compose run flask-base-service python manage.py test`|Run integration tests|
+|`docker-compose exec flask-api python manage.py test`| Runs all integration tests|
+|`docker-compose exec flask-api python manage.py test <file-name or pattern>`| Runs all integration tests that matches the file-name or pattern |
+
+> Make sure you run tests on `development` target. It does not work on `debug` target which uses debugpy library.
+> There are more than 55 integration test covering the REST endpoints. Check out test implementations inside [test](/flask-api/tests/) folder.
+
+The most conveniend way to run test on demand is by using VSCode UI. 
+
+![vs-code UI testing](.github/files/ui-tests.gif)
 
 
 ## Dependencies
 
-* Python v3.8.2
-* Docker v18.03.1-ce
-* Docker Compose v1.21.1
-* Docker Machine v0.14.0
-* Docker Compose file v3.6
-* Flask v2.0.1
-* Flask-SQLAlchemy v2.5.1
-* Flask-Testing v0.8.1
-* psycopg2 v2.9.1
-* Gunicorn v20.1.0
-* Nginx v1.21.8
-* Rabittmq v3.9.5
-* redis 6.2.5
-* Twilio 6.63.1
+* Python 3.11.3
+* Docker 20.10.11+
+* Docker Compose 1.29.2+
+* Flask v2.3.2
+
+For a full list of python dependencies check out [requiremets.txt](/flask-api/requirements.txt) file.
+
 
 ## RESTful endpoints
+
+Run `docker-compose exec flask-api flask routes` to see the REST API endpoints list.
+
+```bash
+Endpoint                                    Methods  Rule                                 
+------------------------------------------  -------  -------------------------------------
+auth.facebook_login                         POST     /v1/auth/facebook/login              
+auth.get_user_status                        GET      /v1/auth/status                      
+auth.login_user                             POST     /v1/auth/login                       
+auth.logout_user                            GET      /v1/auth/logout                      
+auth.password_change                        PUT      /v1/auth/password_change             
+auth.password_recovery                      POST     /v1/auth/password_recovery           
+auth.password_reset                         PUT      /v1/auth/password                    
+auth.register_user                          POST     /v1/auth/register                    
+auth.set_standalone_user                    PUT      /v1/auth/facebook/set_standalone_user
+devices.connect_device_with_logged_in_user  PUT      /v1/devices/<device_id>              
+devices.register_device                     POST     /v1/devices                          
+email_validation.email_verification         PUT      /v1/email_verification               
+email_validation.verify_email               GET      /v1/email_verification/<token>       
+phone_validation.register_user_cellphone    POST     /v1/cellphone                        
+phone_validation.verify_user_cellphone      PUT      /v1/cellphone/verify                 
+static                                      GET      /static/<path:filename>              
+users.add_user                              POST     /v1/users                            
+users.get_all_users                         GET      /v1/users                            
+users.get_single_user                       GET      /v1/users/<user_id>                  
+users.ping_pong                             GET      /v1/ping                             
+users.push_echo                             POST     /v1/push_echo      
+```
 
 ### Sanity Check
 
@@ -288,13 +334,117 @@ flask_base_dev=#
 
 ### How do I add a new API endpoint version..?
 
+`flask-base-api` supports backwards compatibility, which is crucial for mobile api development. API services are added under [/v1](/flask-api/project/api/v1/) url prefix by default. 
+
+In order to update endpoints and still support v1, simply regist blueprints with url-prefix `/v2` and do not change `/v1` endpoints. Whenever an endpoint needs to be updated, copy `v1` version and paste it in `v2` project folder, then make necesarry changes over `v2`. 
+
+```python
+    app.register_blueprint(auth_blueprint, url_prefix='/v1')
+    app.register_blueprint(auth_blueprint2, url_prefix='/v2')
+    ...
+    ..
+    .
+```
+
 ### How do I change/add app configs?
+
+`flask-base-api` support multiple environments. Check out config values at [/flask-api/project/config.py](/flask-api/project/config.py).
 
 ### How does error handling works?
 
+`flask-base-api` registers multiple error handlers for most common exceptions types.
 
+```python
+    # register error handlers
+    from project.api.common.utils import exceptions
+    from project.api.common import error_handlers
+    InvalidPayload, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.BusinessException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.UnauthorizedException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
+    app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)
+    app.register_error_handler(Exception, error_handlers.handle_general_exception)
+```
+
+ You can raise `InvalidPayload`, `BusinessException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ServerErrorException` from within endpoint implementations with is formated into json  format by error handlers. For instance: 
+
+ ```python
+  raise UnauthorizedException(message='Something went wrong. Please contact us.')
+ ```
+
+and error handler returns 
+
+> 401 Unauthorized
+
+```json
+{"message":"Something went wrong. Please contact us.","status":"error"}
+```
+
+You can easily implement custom exception by extending `APIException` type, which is the same type that `flask-base-api` exceptions extends.
+
+```python
+class APIException(Exception):
+
+    def __init__(self, message, status_code, payload):
+        super().__init__()
+        self.message = message
+        self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        rv['status'] = 'error'
+        return rv
+```
+
+We can return a response message for the new exception type by registering a handler like:
+
+```python
+app.register_error_handler(MyNewException, error_handlers.handle_general_exception)
+``` 
 
 ### How do I implement a authenticated service?
+
+`flask-base-api` use JWT authentication. 
+
+By using `@authenticate` decorator you can easily force JWT check and authentication for the endpoint like the following method indicates. If authentication goes well, `user_id` is passed as argument to the endpoint function. If something goes wrong, it raise `UnauthorizedException()` and server responds with a 401 Unauthorized response.
+
+```python
+@phone_validation_blueprint.route('/cellphone/verify', methods=['PUT'])
+@accept('application/json')
+@authenticate
+def verify_user_cellphone(user_id: int):
+    ''' verifies cellphone_validation_code, idempotent (could be used many times) '''
+    post_data = request.get_json()
+    if not post_data:
+        raise InvalidPayload()
+    validation_code = post_data.get('validation_code')
+    user = User.get(user_id)
+    ...
+    ..
+    .
+```
+
+Curious about how the `@authenticate`  decorator is implemented?
+
+```python
+def authenticate(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            raise UnauthorizedException()
+        auth_token = auth_header.split(" ")[1]
+        user_id = User.decode_auth_token(auth_token)
+        user = User.get(user_id)
+        if not user or not user.active:
+            raise UnauthorizedException(message='Something went wrong. Please contact us.')
+        return f(user_id, *args, **kwargs)
+    return decorated_function
+```
+
 
 ### How do I test the a endpoint?
 
@@ -303,3 +453,35 @@ Tests are implemented using [Flask-Testing](https://github.com/jarus/flask-testi
 You can create a new test case class in a new file which must start with `test_` and ideally it should extend to `BaseTestCase` class which loads testing configuration and clean up db state after each test case execution. Test case method name must be prefixed with `test`.
 
 After implementing the new test case you can run it. Go to [here](#run-tests) to see how.
+
+### How do I use swagger to play with the API?
+
+
+Now you can check swagger RESTful API documentation visiting http://localhost:8080.
+
+![swagger](.github/files/swagger.png)
+
+RESTful API is available under http://localhost:5001/v1. You can also use port 80 since nginx was also set up. [http://localhost/v1/ping](http://localhost/v1/ping) should return `{"status":"success","message":"pong!"}`.
+
+
+### How do I use pgAdmin?
+
+First get the postgres db ip address by executing
+
+```bash
+docker inspect postgres-db | grep "IPAddress"
+```
+
+which outputs the `IPAddress`
+
+```bash
+  "SecondaryIPAddresses": null,
+  "IPAddress": "",
+          "IPAddress": "192.168.224.3",
+```
+
+Then open `pgAdmin` in your browser `http://0.0.0.0:5050/`, and login  by using email: `admin@admin.com`, password: `password` credentials.
+
+Then connect to db server using the ip address retrieved above and  using the following postgres credentials: user: `postgres`, password: `postgres`.
+
+![pgAdmin](.github/files/pgAdmin.png)

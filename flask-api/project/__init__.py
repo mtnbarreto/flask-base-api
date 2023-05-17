@@ -24,6 +24,7 @@ from project.models.event import Event
 conf = Config(root_path=os.path.dirname(os.path.realpath(__file__)))
 conf.from_object(os.getenv('APP_SETTINGS'))
 
+
 sentry = None
 twilio_client = Client(conf['TWILIO_ACCOUNT_SID'], conf['TWILIO_AUTH_TOKEN'])
 push_service = FCMNotification(api_key=conf['FCM_SERVER_KEY'])

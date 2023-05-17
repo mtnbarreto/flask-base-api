@@ -7,7 +7,7 @@ class BaseConfig:
     DEBUG = False
     TESTING = False
     LOGGING_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    LOGGING_LOCATION = 'flask-base.log'
+    LOGGING_LOCATION = 'flask-api.log'
     LOGGING_LEVEL = logging.DEBUG
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -32,6 +32,7 @@ class BaseConfig:
     CELLPHONE_VALIDATION_CODE_EXP_SECS = os.environ.get('CELLPHONE_VALIDATION_CODE_EXP_SECS') or 600
     SENTRY_DSN = 'Sentry_DNS'
     FCM_SERVER_KEY = os.environ.get('FCM_SERVER_KEY')
+    ITEMS_PER_PAGE = 20
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration"""
@@ -59,7 +60,6 @@ class TestingConfig(BaseConfig):
 
 class ProductionConfig(BaseConfig):
     """Production configuration"""
-    DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     SENTRY_DSN = 'Sentry_DNS'

@@ -1,0 +1,740 @@
+openapi: 3.0.0
+servers:
+  - url: http://0.0.0.0:5001/v1
+    description: Development server
+info:
+  description: |
+    Base API - Swagger spec for documenting the base backed API
+  version: 1.0.0
+  title: Base Backend API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: username@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: sanity
+    description: Sanity checks
+  - name: users
+    description: Operations about user
+    externalDocs:
+      description: Find out more
+      url: 'http://swagger.io'
+  - name: auth
+    description: Authentication operations
+  - name: cellphone
+    description: Cellphone operations
+  - name: devices
+    description: Devices operations
+  - name: email
+    description: Email operations
+  - name: bookings
+    description: Booking endpoints
+paths:
+  /ping:
+    get:
+      description: Just a sanity check
+      tags:
+        - sanity
+      responses:
+        '200':
+          description: Will return 'pong!'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /users:
+    post:
+      description: adds a user
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: email was added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Sorry. That email or username already exists.
+        'default':
+          $ref: '#/components/responses/ServerError'
+    get:
+      description: Returns all users
+      tags:
+        - users
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      responses:
+        '200':
+          description: array user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserArray'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  '/users/{userId}':
+    get:
+      description: Returns a user based on a single user ID
+      tags:
+        - users
+      operationId: getUser
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+        - name: userId
+          in: path
+          description: ID of user to fetch
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Get single user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: 'User does not exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /auth/register:
+    post:
+      description: Creates/registers a new user
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '200':
+          description: Successfully registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAuth'
+        '400':
+          description: '''Sorry. That user already exists.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /auth/login:
+    post:
+      description: Logs a user in
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAuth'
+        '404':
+          description: 'User does not exist.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /auth/logout:
+    get:
+      description: Logs a user out
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /auth/status:
+    get:
+      description: Returns the logged in user's status
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      responses:
+        '200':
+          description: user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /auth/password_recovery:
+    post:
+      description: >-
+        creates a password_recovery_hash and sends email to user (assumes
+        login=email)
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecovery'
+      responses:
+        '200':
+          description: Successfully sent email with password recovery.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /auth/password:
+    put:
+      description: reset user password (assumes login=email)
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+      responses:
+        '200':
+          description: Successfully reseted password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /auth/password_change:
+    put:
+      description: changes user password (assumes login=email)
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+      responses:
+        '200':
+          description: Successfully changed password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Error, wrong old password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /auth/facebook/login:
+    post:
+      description: >-
+        logs in user using fb_access_token returning the corresponding JWT if
+        user does not exist registers/creates a new one
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookLogin'
+      responses:
+        '200':
+          description: Successfully facebook login.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+      security: []
+  /auth/facebook/set_standalone_user:
+    put:
+      description: >-
+        sets username and password to work directly on the system without facebook
+      tags:
+        - auth
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successfully set standalone user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Sorry. That username already exists, choose another username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Invalid password. Please try again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /cellphone:
+    post:
+      description: >-
+        generates cellphone_validation_code, idempotent (could be used for
+        resend cellphone_validation_code) allows just 1 user per cellphone
+        validation!
+      tags:
+        - cellphone
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CellphoneRegister'
+      responses:
+        '200':
+          description: Successfully sent validation code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /email_verification:
+    put:
+      description: creates a email_token_hash and sends email with token to user (assumes login=email), idempotent (could be use for resend)
+      tags:
+        - email
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+      responses:
+        '200':
+          description: Successfully reseted password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /email_verification/<token>:
+    get:
+      description: sets email verified date
+      tags:
+        - email
+      parameters:
+        - name: token
+          in: path
+          description: email token jwt like
+          required: true
+          schema:
+            type: string
+      operationId: verify_email
+      responses:
+        '200':
+          description: Successfully reseted password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /cellphone/verify:
+    put:
+      description: >-
+        verifies cellphone_validation_code, idempotent (could be used many
+        times)
+      tags:
+        - cellphone
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CellphoneVerify'
+      responses:
+        '200':
+          description: Successful cellphone validation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /devices:
+    post:
+      description: creates or updates a device on the system
+      tags:
+        - devices
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        '200':
+          description: Device successfully registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /devices/<device_id>:
+    put:
+      description: >-
+        creates/updates and associates the device device_id to the user
+        logged_in_user_id
+      tags:
+        - devices
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        '200':
+          description: Device successfully registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /upcoming_bookings:
+    get:
+      description: Returns all users
+      tags:
+        - bookings
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      responses:
+        '200':
+          description: array upcoming booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingArray'
+        'default':
+          $ref: '#/components/responses/ServerError'
+  /past_bookings:
+    get:
+      description: Returns all past bookings, paginated
+      tags:
+        - bookings
+      parameters:
+        - $ref: '#/components/parameters/acceptHeaderParam'
+      responses:
+        '200':
+          description: array user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserArray'
+        'default':
+          $ref: '#/components/responses/ServerError'
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
+components:
+  parameters:
+    acceptHeaderParam:
+      in: header
+      name: Accept
+      required: true
+      schema:
+        type: string
+      example: application/json
+      description: Accept HTTP header default value (application/json)
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        email_validation_date:
+          type: string
+          format: date-time
+        cellphone_validation_date:
+          type: string
+          format: date-time
+    UserArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+    BookingArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Booking'
+    UserRegister:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      xml:
+        name: UserRegister
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      xml:
+        name: UserLogin
+    PasswordRecovery:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+      xml:
+        name: PasswordRecovery
+    PasswordReset:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+      xml:
+        name: PasswordReset
+    PasswordChange:
+      type: object
+      required:
+        - old_password
+        - new_password
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+      xml:
+        name: PasswordReset
+    Token:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+      xml:
+        name: Token
+    FacebookLogin:
+      type: object
+      required:
+        - fb_access_token
+      properties:
+        fb_access_token:
+          type: string
+      xml:
+        name: FacebookLogin
+    CellphoneRegister:
+      type: object
+      required:
+        - cellphone_number
+        - cellphone_cc
+      properties:
+        cellphone_number:
+          type: string
+        cellphone_cc:
+          type: string
+      xml:
+        name: CellphoneRegister
+    CellphoneVerify:
+      type: object
+      required:
+        - validation_code
+      properties:
+        validation_code:
+          type: string
+      xml:
+        name: CellphoneVerify
+    Device:
+      type: object
+      required:
+        - device_id
+        - device_type
+        - pn_token
+      properties:
+        device_id:
+          type: string
+        device_type:
+          type: string
+        pn_token:
+          type: string
+      xml:
+        name: Device
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string
+      required:
+        - status
+        - message
+    ApiResponseAuth:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            auth_token:
+              type: string
+          required:
+            - auth_token
+    # Schema for error response body
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+  requestBodies:
+    UserArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserRegister'
+      description: List of user object
+      required: true
+  responses:
+    ServerError:
+      description: Something went wrong
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

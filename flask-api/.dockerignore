@@ -2,4 +2,3 @@ env
 .dockerignore
 Dockerfile
 Dockerfile-prod
-README.md

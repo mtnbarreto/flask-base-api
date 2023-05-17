@@ -2,21 +2,19 @@
 
 import datetime, os, logging
 from flask import Flask, jsonify, Response
-from flask.json import JSONEncoder
 from flask_cors import CORS
+from flask.json.provider import JSONProvider
+import orjson
 
+class OrJSONProvider(JSONProvider):
+    def dumps(self, obj, *, option=None, **kwargs):
+        if option is None:
+            option = orjson.OPT_APPEND_NEWLINE | orjson.OPT_NAIVE_UTC
+        
+        return orjson.dumps(obj, option=option).decode()
 
-class BaseJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        try:
-            if isinstance(obj, datetime.date):
-                return obj.isoformat()
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, obj)
+    def loads(self, s, **kwargs):
+        return orjson.loads(s)
 
 class BaseResponse(Response):
     default_mimetype = 'application/json'
@@ -30,7 +28,7 @@ class BaseResponse(Response):
 
 class BaseFlask(Flask):
     response_class = BaseResponse
-    json_encoder = BaseJSONEncoder # set up custom encoder to handle date as ISO8601 format
+    json_provider_class = OrJSONProvider
 
     def __init__(
         self,
