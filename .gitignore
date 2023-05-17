@@ -1,4 +1,8 @@
 __pycache__
-env
+.env
 htmlcov
-flask-base.log
+flask-api.log
+set_local_env_vars.sh
+__pycache__
+.DS_Store
+.venv
