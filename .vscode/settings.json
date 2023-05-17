@@ -1,0 +1,17 @@
+// .vscode/settings.json
+{
+    "python.formatting.provider": "black",
+    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./flask-api",
+        "-p",
+        "test_*.py"
+    ],
+}

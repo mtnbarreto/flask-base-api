@@ -1,0 +1,37 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Set ENV variables",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/set_local_env_vars.sh",
+            "isBackground": true
+        },
+        {
+            "label": "Print Env Environment",
+            "type": "shell",
+            "command": "printenv | grep APP"
+        },
+        {
+            "label": "Docker Build & Up",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/set_local_env_vars.sh && cd flask-main && docker-compose down && docker-compose build && docker-compose up -d",
+            "problemMatcher": []
+        },
+        {
+            "label": "[DB] Recreate Development",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/set_local_env_vars.sh && cd flask-main && docker-compose exec flask-api python manage.py recreate_db",
+            "problemMatcher": []
+        },
+        {
+            "label": "[DB] Recreate Test",
+            "type": "shell",
+            "command": "source ${workspaceFolder}/set_local_env_vars.sh && cd flask-main && docker-compose -f exec flask-api python manage.py recreate_test_db",
+            "problemMatcher": []
+        },
+        
+    ]
+}
