@@ -46,7 +46,7 @@ This repository aims to create a starting point to develop a REST API using Pyth
 
 #### 3 - Set up environment variables
 
-Before putting up and running the app containers we need to set up some environment variables which mostly are user services accounts like firebase and twilio. To do so create a file named `set_local_env_vars.sh` and add the following content replacing the values to it.
+Before putting up and running the app containers, we need to set up some environment variables, mainly user services accounts like Firebase and Twilio. To do so, create a file named `set_local_env_vars.sh` and add the following content replacing the values.
 
 ```bash
 #!/usr/bin/env bash
@@ -68,7 +68,7 @@ export MAIL_USE_SSL="True"
 export FCM_SERVER_KEY="9876oiuy"
 ```  
 
-To set up the env variables execute:
+To set up the env variables, execute:
 
 ```bash
 source ../set_local_env_vars.sh
@@ -128,7 +128,7 @@ Make sure all services started properly. `State` should be `Up`.
 
 #### 6 - Set up database
 
-By running the following command we recreate all development db tables:
+By running the following command, we recreate all development db tables:
 
 ```bash
 docker-compose exec flask-api python manage.py recreate_db
@@ -140,7 +140,7 @@ then you can populate the db by executing the following command:
 docker-compose exec flask-api python manage.py seed_db
 ```
 
-Finally test that everything works by executing the following curl command that tries to logged in using a user created by the seed_db command:
+Finally, test that everything works by executing the following curl command that tries to logged in using a user created by the seed_db command:
 
 ```bash
 curl -X POST "http://0.0.0.0/v1/auth/login" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"email\":\"a@a.com\",\"password\":\"password\"}"
@@ -165,9 +165,9 @@ it should output something like this:
 |:---|---|
 |`docker-compose logs`| Shows logs of all docker-compose related containers.|
 |`docker exec -ti postgres-db psql -U postgres`| Runs psql.|
-|`docker-compose exec <container_name> bash`| Runs bash in container_name container. See example below.|
+|`docker-compose exec <container_name> bash`| Runs bash in container_name container. See the example below.|
 
-> `docker-compose logs -f <container_name>` shows only the logs of the <container_name> container. For example `docker-compose logs -f flask-api` shows flask web service logs while `docker-compose logs -f postgres-db` shows  postgresSQL db container logs.
+> `docker-compose logs -f <container_name>` shows only the logs of the <container_name> container. For example, `docker-compose logs -f flask-api` shows flask web service logs while `docker-compose logs -f postgres-db` shows  PostgreSQL db container logs.
 
 ```bash
 barreto$ docker-compose exec postgres-db bash
@@ -230,10 +230,10 @@ db_dev=#
 |`docker-compose exec flask-api python manage.py test`| Runs all integration tests|
 |`docker-compose exec flask-api python manage.py test <file-name or pattern>`| Runs all integration tests that matches the file-name or pattern |
 
-> Make sure you run tests on `development` target. It does not work on `debug` target which uses debugpy library.
-> There are more than 55 integration test covering the REST endpoints. Check out test implementations inside [test](/flask-api/tests/) folder.
+> Make sure you run tests on the `development` target. It does not work on `debug` target, which uses debugpy library.
+> There are more than 55 integration tests covering the REST endpoints. Check out test implementations inside [test](/flask-api/tests/) folder.
 
-The most conveniend way to run test on demand is by using VSCode UI. 
+The most convenient way to run tests on demand is by using VSCode UI. 
 
 ![vs-code UI testing](.github/files/ui-tests.gif)
 
@@ -245,7 +245,7 @@ The most conveniend way to run test on demand is by using VSCode UI.
 * Docker Compose 1.29.2+
 * Flask v2.3.2
 
-For a full list of python dependencies check out [requiremets.txt](/flask-api/requirements.txt) file.
+For a complete list of Python dependencies, check out [requiremets.txt](/flask-api/requirements.txt) file.
 
 
 ## RESTful endpoints
@@ -295,8 +295,8 @@ users.push_echo                             POST     /v1/push_echo
 | `/auth/password_recovery`  | `POST`  | Creates a password_recovery_hash and sends email to user |
 | `/auth/password`  | `PUT`  | Reset user password  |
 | `/auth/password_change`  | `PUT`  | Changes user password  |
-| `/auth/facebook/login`  | `POST`  | Logs in user using fb_access_token returning the corresponding JWT. if user does not exist registers/creates a new one  |
-| `/auth/facebook/set_standalone_user`  | `PUT`  | Sets username and password to work directly on the system without facebook  |
+| `/auth/facebook/login`  | `POST`  | Logs in user using fb_access_token returning the corresponding JWT. if the user does not exist registers/creates a new one  |
+| `/auth/facebook/set_standalone_user`  | `PUT`  | Sets username and password to work directly on the system without Facebook  |
 
 > Endpoints implementation can be found under [/project/api/v1/auth.py](project/api/v1/auth.py).
 
@@ -365,13 +365,13 @@ In order to update endpoints and still support v1, simply regist blueprints with
     app.register_error_handler(Exception, error_handlers.handle_general_exception)
 ```
 
- You can raise `InvalidPayload`, `BusinessException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ServerErrorException` from within endpoint implementations with is formated into json  format by error handlers. For instance: 
+ You can raise `InvalidPayload`, `BusinessException`, `UnauthorizedException`, `ForbiddenException`, `NotFoundException`, `ServerErrorException` from within endpoint implementations, which is formatted into JSON  format by error handlers. For instance: 
 
  ```python
   raise UnauthorizedException(message='Something went wrong. Please contact us.')
  ```
 
-and error handler returns 
+and the error handler returns 
 
 > 401 Unauthorized
 
@@ -379,7 +379,7 @@ and error handler returns
 {"message":"Something went wrong. Please contact us.","status":"error"}
 ```
 
-You can easily implement custom exception by extending `APIException` type, which is the same type that `flask-base-api` exceptions extends.
+You can easily implement a custom exception by extending the `APIException` type, the same type that `flask-base-api` exceptions extend.
 
 ```python
 class APIException(Exception):
@@ -403,11 +403,11 @@ We can return a response message for the new exception type by registering a han
 app.register_error_handler(MyNewException, error_handlers.handle_general_exception)
 ``` 
 
-### How do I implement a authenticated service?
+### How do I implement an authenticated service?
 
 `flask-base-api` use JWT authentication. 
 
-By using `@authenticate` decorator you can easily force JWT check and authentication for the endpoint like the following method indicates. If authentication goes well, `user_id` is passed as argument to the endpoint function. If something goes wrong, it raise `UnauthorizedException()` and server responds with a 401 Unauthorized response.
+By using `@authenticate` decorator you can easily force JWT check and authentication for the endpoint like the following method indicates. If authentication goes well, `user_id` is passed as argument to the endpoint function. If something goes wrong, it raises `UnauthorizedException()` and the server responds with a 401 Unauthorized response.
 
 ```python
 @phone_validation_blueprint.route('/cellphone/verify', methods=['PUT'])
@@ -444,27 +444,27 @@ def authenticate(f):
 ```
 
 
-### How do I test the a endpoint?
+### How do I test an endpoint?
 
 Tests are implemented using [Flask-Testing](https://github.com/jarus/flask-testing) library. All testing files are placed under [/tests](tests). There are more than 50 test cases already implemented.
 
-You can create a new test case class in a new file which must start with `test_` and ideally it should extend to `BaseTestCase` class which loads testing configuration and clean up db state after each test case execution. Test case method name must be prefixed with `test`.
+You can create a new test case class in a new file which must start with `test_`, and ideally, it should extend to the `BaseTestCase` class which loads testing configuration and clean up db state after each test case execution. Test case method name must be prefixed with `test`.
 
-After implementing the new test case you can run it. Go to [here](#run-tests) to see how.
+After implementing the new test case, you can run it. Go to [here](#run-tests) to see how.
 
-### How do I use swagger to play with the API?
+### How do I use Swagger to play with the API?
 
 
-Now you can check swagger RESTful API documentation visiting http://localhost:8080.
+Now you can check swagger RESTful API documentation by visiting http://localhost:8080.
 
 ![swagger](.github/files/swagger.png)
 
-RESTful API is available under http://localhost:5001/v1. You can also use port 80 since nginx was also set up. [http://localhost/v1/ping](http://localhost/v1/ping) should return `{"status":"success","message":"pong!"}`.
+RESTful API is available under http://localhost:5001/v1. You can also use port 80 since Nginx was also set up. [http://localhost/v1/ping](http://localhost/v1/ping) should return `{"status":"success","message":"pong!"}`.
 
 
 ### How do I use pgAdmin?
 
-First get the postgres db ip address by executing
+First, get the Postgres db ip address by executing
 
 ```bash
 docker inspect postgres-db | grep "IPAddress"
@@ -478,8 +478,8 @@ which outputs the `IPAddress`
           "IPAddress": "192.168.224.3",
 ```
 
-Then open `pgAdmin` in your browser `http://0.0.0.0:5050/`, and login  by using email: `admin@admin.com`, password: `password` credentials.
+Then open `pgAdmin` in your browser `http://0.0.0.0:5050/`, and log in  by using email: `admin@admin.com`, password: `password` credentials.
 
-Then connect to db server using the ip address retrieved above and  using the following postgres credentials: user: `postgres`, password: `postgres`.
+Then connect to db server using the ip address retrieved above and  using the following Postgres credentials: user: `postgres`, password: `postgres`.
 
 ![pgAdmin](.github/files/pgAdmin.png)
