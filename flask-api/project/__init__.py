@@ -62,7 +62,8 @@ def create_app():
     app.register_error_handler(exceptions.ForbiddenException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.NotFoundException, error_handlers.handle_exception)
     app.register_error_handler(exceptions.ServerErrorException, error_handlers.handle_exception)
-    app.register_error_handler(Exception, error_handlers.handle_general_exception)
+    if not app.debug and not app.testing:
+        app.register_error_handler(Exception, error_handlers.handle_general_exception)
     return app
 
 def setup_extensions(app):

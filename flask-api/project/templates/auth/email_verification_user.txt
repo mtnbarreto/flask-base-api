@@ -1,1 +1,1 @@
-Email Verification by Flask Base Api - {{user.username}}
+Email Verification by Flask Base Api - {{user.email}}

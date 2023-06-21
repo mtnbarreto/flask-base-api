@@ -67,6 +67,7 @@ services:
       - MAIL_USE_TLS=${MAIL_USE_TLS}
       - MAIL_USE_SSL=${MAIL_USE_SSL}
       - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     depends_on:
       - postgres-db
     links:
@@ -112,6 +113,7 @@ services:
       - MAIL_USE_TLS=${MAIL_USE_TLS}
       - MAIL_USE_SSL=${MAIL_USE_SSL}
       - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+      - GOOGLE_CLIENT_ID={GOOGLE_CLIENT_ID}
     depends_on:
       - rabbitmq
       - redis

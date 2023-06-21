@@ -15,6 +15,7 @@ This repository aims to create a starting point to develop a REST API using Pyth
 * RabbitMQ message broker and RabbitMQ management plugin integration.
 * Supports RESTful API versioning.
 * JWT authentication.
+* Google authentication.
 * Facebook login.
 * Firebase Cloud Messaging integration to send push notifications.
 * SQLAlchemy ORM integration and modeling of base db entities.
@@ -66,6 +67,7 @@ export CELLPHONE_VALIDATION_CODE_EXP_SECS="600"
 export MAIL_USE_TLS="False"
 export MAIL_USE_SSL="True"
 export FCM_SERVER_KEY="9876oiuy"
+export GOOGLE_CLIENT_ID="my-google-client-id.apps.googleusercontent.com"
 ```  
 
 To set up the env variables, execute:
@@ -150,10 +152,13 @@ it should output something like this:
 
 ```json
 {
-  "status":"success",
-  "message":"Successfully logged in.",
-  "auth_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODY2NzU2MzMsImlhdCI6MTY4NDA4MzYzMywic3ViIjoxfQ.t8QKjoNfP3GuCLpCLVW-sPeEynHtX8Vk7DaOfVn0tWU",
-  "username":"martin"
+    "status":"success",
+    "message":"Successfully logged in.",
+    "auth_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODk5NjQyNDgsImlhdCI6MTY4NzM3MjI0OCwic3ViIjoxfQ.RyYsShoPiDAXyb0q72TOWMFZFVfTpWrHQmxIwTIU1Y8",
+    "email":"a@a.com",
+    "username":null,
+    "given_name":null,
+    "family_name":null
 }
 ```
 
@@ -231,7 +236,7 @@ db_dev=#
 |`docker-compose exec flask-api python manage.py test <file-name or pattern>`| Runs all integration tests that matches the file-name or pattern |
 
 > Make sure you run tests on the `development` target. It does not work on `debug` target, which uses debugpy library.
-> There are more than 55 integration tests covering the REST endpoints. Check out test implementations inside [test](/flask-api/tests/) folder.
+> There are more than 54 integration test covering the REST endpoints. Check out test implementations inside [test](/flask-api/tests/) folder.
 
 The most convenient way to run tests on demand is by using VSCode UI. 
 

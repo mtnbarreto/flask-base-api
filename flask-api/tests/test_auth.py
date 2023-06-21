@@ -15,7 +15,6 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict(
-                    username='justatest',
                     email='test@test.com',
                     password='123456'
                 )),
@@ -24,19 +23,17 @@ class TestAuthBlueprint(BaseTestCase):
             )
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
-            self.assertEqual(data['username'], 'justatest')
             self.assertEqual(data['message'], 'Successfully registered.')
             self.assertTrue(data['auth_token'])
             self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 201)
 
     def test_user_registration_duplicate_email(self):
-        add_user('test', 'test@test.com', 'test')
+        add_user(email='test@test.com', password='test')
         with self.client:
             response = self.client.post(
                 '/v1/auth/register',
                 data=json.dumps(dict(
-                    username='michael',
                     email='test@test.com',
                     password='test'
                 )),
@@ -48,25 +45,6 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertIn(
                 'Sorry. That user already exists.', data['message'])
             self.assertIn('error', data['status'])
-
-    # def test_user_registration_duplicate_username(self):
-    #     add_user('test', 'test@test.com', 'test')
-    #     with self.client:
-    #         response = self.client.post(
-    #             '/v1/auth/register',
-    #             data=json.dumps(dict(
-    #                 username='test',
-    #                 email='test@test.com2',
-    #                 password='test'
-    #             )),
-    #             content_type='application/json',
-    #             headers=[('Accept', 'application/json')]
-    #         )
-    #         data = json.loads(response.data.decode())
-    #         self.assertEqual(response.status_code, 400)
-    #         self.assertIn(
-    #             'Sorry. That user already exists.', data['message'])
-    #         self.assertIn('error', data['status'])
 
     def test_user_registration_invalid_json(self):
         with self.client:
@@ -81,27 +59,11 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertIn('Invalid payload.', data['message'])
             self.assertIn('error', data['status'])
 
-    def test_user_registration_invalid_json_keys_no_username(self):
-        with self.client:
-            response = self.client.post(
-                '/v1/auth/register',
-                data=json.dumps(dict(email='test@test.com',
-                                  password='test')),
-                content_type='application/json',
-                headers=[('Accept', 'application/json')]
-            )
-            data = json.loads(response.data.decode())
-            self.assertEqual(response.status_code, 400)
-            self.assertIn('Invalid payload.', data['message'])
-            self.assertIn('error', data['status'])
-
     def test_user_registration_invalid_json_keys_no_email(self):
         with self.client:
             response = self.client.post(
                 '/v1/auth/register',
-                data=json.dumps(dict(
-                                    username='justatest',
-                                    password='test')),
+                data=json.dumps(dict(password='test')),
                 content_type='application/json',
                 headers=[('Accept', 'application/json')]
             )
@@ -114,10 +76,7 @@ class TestAuthBlueprint(BaseTestCase):
         with self.client:
             response = self.client.post(
                 '/v1/auth/register',
-                data=json.dumps(dict(
-                    username='justatest',
-                    email='test@test.com'
-                )),
+                data=json.dumps(dict(email='test@test.com')),
                 content_type='application/json',
                 headers=[('Accept', 'application/json')]
             )
@@ -131,7 +90,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_registered_user_login(self):
         with self.client:
-            user = add_user('test_username', 'test@test.com', 'test')
+            user = add_user(email='test@test.com', password='test')
             response = self.client.post(
                 '/v1/auth/login',
                 data=json.dumps(dict(
@@ -145,7 +104,6 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(data['status'], 'success')
             self.assertEqual(data['message'], 'Successfully logged in.')
             self.assertTrue(data['auth_token'])
-            self.assertEqual(data['username'], 'test_username')
             self.assertEqual(response.content_type, 'application/json')
             self.assertEqual(response.status_code, 200)
 
@@ -169,7 +127,7 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_valid_logout(self):
-        add_user('test', 'test@test.com', 'test')
+        add_user(email='test@test.com', password='test')
         with self.client:
             # user login
             resp_login = self.client.post(
@@ -193,7 +151,7 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_invalid_logout_expired_token(self):
-        add_user('test', 'test@test.com', 'test')
+        add_user(email='test@test.com', password='test')
         with self.client:
             resp_login = self.client.post(
                 '/v1/auth/login',
@@ -226,7 +184,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 401)
 
     def test_user_status(self):
-        add_user('test', 'test@test.com', 'test')
+        add_user(email='test@test.com', password='test')
         with self.client:
             resp_login = self.client.post(
                 '/v1/auth/login',
@@ -244,7 +202,6 @@ class TestAuthBlueprint(BaseTestCase):
             data = json.loads(response.data.decode())
             self.assertEqual(data['status'], 'success')
             self.assertTrue(data['data'] is not None)
-            self.assertEqual(data['data']['username'], 'test')
             self.assertEqual(data['data']['email'], 'test@test.com')
             self.assertTrue(data['data']['active'] is True)
             self.assertTrue(data['data']['created_at'])
@@ -264,7 +221,7 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_add_user_inactive(self):
-        add_user('test', 'test@test.com', 'test')
+        add_user(email='test@test.com', password='test')
         # update user
         user = User.first_by(email='test@test.com')
         user.active = False
@@ -282,7 +239,6 @@ class TestAuthBlueprint(BaseTestCase):
             response = self.client.post(
                 '/v1/users',
                 data=json.dumps(dict(
-                    username='michael',
                     email='michael@realpython.com',
                     password='test'
                 )),
@@ -295,7 +251,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 401)
 
     def test_password_recovery(self):
-        user = add_user('justatest3', 'test3@test.com', 'password')
+        user = add_user(email='test3@test.com', password='password')
 
         with self.client:
             response = self.client.post(
@@ -312,7 +268,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertEqual(response.status_code, 200)
 
     def test_password_reset_expired(self):
-        user = add_user('justatest3', 'test@test.com', 'password')
+        user = add_user(email='test@test.com', password='password')
         token = user.encode_password_token()
         user = set_user_token_hash(user, token)
         user_password_before = user.password
@@ -337,7 +293,7 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_password_reset_already_reset(self):
-        user = add_user('justatest3', 'test@test.com', 'password')
+        user = add_user(email='test@test.com', password='password')
         token = user.encode_password_token()
 
         user = set_user_token_hash(user, token)
@@ -394,7 +350,7 @@ class TestAuthBlueprint(BaseTestCase):
             self.assertIn('error', data['status'])
 
     def test_passwords_token_hash_are_random(self):
-        add_user('justatest1', 'test@test.com1', 'password')
+        add_user(email='test@test.com1', password='password')
 
         with self.client:
             response = self.client.post(
@@ -412,7 +368,7 @@ class TestAuthBlueprint(BaseTestCase):
 
         user = User.first_by(email='test@test.com1')
         user_token_hash1 = user.token_hash
-        add_user('justatest2', 'test@test.com2', 'password')
+        add_user(email='test@test.com2', password='password')
 
         with self.client:
             response = self.client.post(
@@ -435,7 +391,7 @@ class TestAuthBlueprint(BaseTestCase):
         self.assertTrue(user_token_hash1 != "")
 
     def test_password_reset(self):
-        user = add_user('justatest3', 'test@test.com3', 'password')
+        user = add_user(email='test@test.com3', password='password')
         token = user.encode_password_token()
 
         user = set_user_token_hash(user, token)
@@ -460,7 +416,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_register_verify_cellphone(self):
         email = 'test@test.com'
-        user = add_user('justatest1', email, 'password')
+        user = add_user(email=email, password='password')
 
         with self.client:
             resp_login = self.client.post(
@@ -509,7 +465,7 @@ class TestAuthBlueprint(BaseTestCase):
 
     def test_verify_cellphone_user_already_verified(self):
         email = 'test@test.com'
-        user = add_user('justatest1', email, 'password')
+        user = add_user(email=email, password='password')
 
         with self.client:
             resp_login = self.client.post(
@@ -575,7 +531,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_email_verification(self):
 
         email = 'test@test.com'
-        user = add_user('justatest1', email, 'password')
+        user = add_user(email=email, password='password')
 
         with self.client:
             resp_login = self.client.post(
@@ -590,7 +546,7 @@ class TestAuthBlueprint(BaseTestCase):
         #
         #
         #
-        # user = add_user('justatest3', 'test3@test.com', 'password')
+        # user = add_user(email='test3@test.com', password='password')
         #
         # with self.client:
             response = self.client.put(
@@ -627,7 +583,7 @@ class TestAuthBlueprint(BaseTestCase):
 
 
     def test_verify_email(self):
-        user = add_user('justatest', 'test@test.com', 'password')
+        user = add_user(email='test@test.com', password='password')
         token = user.encode_email_token()
         user = set_user_email_token_hash(user, token)
 
@@ -646,7 +602,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_password_change(self):
         email = 'test@test.com'
         old_password = 'old_password'
-        user = add_user('justatest1', email, old_password)
+        user = add_user(email=email, password=old_password)
 
         with self.client:
             resp_login = self.client.post(
@@ -692,7 +648,7 @@ class TestAuthBlueprint(BaseTestCase):
     def test_password_change_invalid_password(self):
         email = 'test@test.com'
         old_password = 'old_password'
-        user = add_user('justatest1', email, old_password)
+        user = add_user(email=email, password=old_password)
 
         with self.client:
             resp_login = self.client.post(

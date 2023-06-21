@@ -1,10 +1,12 @@
 # project/api/v1/auth.py
 
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, render_template
 from sqlalchemy import  or_
 from facepy import GraphAPI
 from flask_accept import accept
 from datetime import datetime
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 from project.extensions import bcrypt, db
 from project.api.common.utils.exceptions import InvalidPayload, BusinessException, NotFoundException, UnauthorizedException
@@ -26,16 +28,15 @@ def register_user():
     post_data = request.get_json()
     if not post_data:
         raise InvalidPayload()
-    username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
-    if not password or not username or not email:
+    if not password or not email:
         raise InvalidPayload()
     # check for existing user
     user = User.first(User.email == email)
     if not user:
         # add new user to db
-        new_user = User(username=username, email=email, password=password)
+        new_user = User(email=email, password=password)
         with session_scope(db.session) as session:
             session.add(new_user)
 
@@ -60,7 +61,7 @@ def register_user():
             'status': 'success',
             'message': 'Successfully registered.',
             'auth_token': auth_token,
-            'username': new_user.username
+            'email': new_user.email
         }, 201
     else:
         # user already registered, set False to device.active
@@ -71,6 +72,11 @@ def register_user():
                 with session_scope(db.session):
                     device.active = False
         raise BusinessException(message='Sorry. That user already exists.')
+
+
+@auth_blueprint.route('/auth/login', methods=['GET'])
+def get_login():
+    return render_template('auth/login.html'), {'Content-Type': 'text/html'}
 
 
 @auth_blueprint.route('/auth/login', methods=['POST'])
@@ -98,7 +104,10 @@ def login_user():
             'status': 'success',
             'message': 'Successfully logged in.',
             'auth_token': auth_token,
+            'email': user.email,
             'username': user.username,
+            'given_name': user.given_name,
+            'family_name': user.family_name
         }
     else:
         # user is not logged in, set False to device.active
@@ -137,12 +146,14 @@ def get_user_status(user_id: int):
         'status': 'success',
         'data': {
             'id': user.id,
-            'username': user.username,
             'email': user.email,
+            'username': user.username,
+            'given_name': user.given_name,
+            'family_name': user.family_name,
             'active': user.active,
-            'created_at': user.created_at,
             'email_validation_date': user.email_validation_date,
-            'cellphone_validation_date': user.cellphone_validation_date
+            'cellphone_validation_date': user.cellphone_validation_date,
+            'created_at': user.created_at,
         }
     }
 
@@ -229,6 +240,87 @@ def password_change(user_id: int):
     }
 
 
+@accept('application/json')
+@auth_blueprint.route('/auth/google/login', methods=['POST'])
+def google_login():
+    ''' logs in user using google_token returning the corresponding JWT
+        if user does not exist registers/creates a new one'''
+    
+    # this commented code works when using js to send credential to server
+    post_data = request.get_json()
+    if not post_data:
+        raise InvalidPayload()
+    client_id = post_data.get('client_id') or post_data.get('clientId')
+    if not client_id:
+        raise InvalidPayload()
+    credential = post_data.get('credential', None)
+
+    
+    # this commented code works when using data-login_uri post to send credential to server
+    # csrf_token_cookie = request.cookies.get('g_csrf_token')
+    # if not csrf_token_cookie:
+    #    raise InvalidPayload(message='No CSRF token in Cookie.')
+    #csrf_token_body = request.form.get('g_csrf_token', None)
+    #if not csrf_token_body:
+    #   raise InvalidPayload(message='No CSRF token in post body.')
+    #if csrf_token_cookie != csrf_token_body:
+    #   raise InvalidPayload(message='Failed to verify double submit cookie.')
+    #credential = request.form.get('credential', None)
+
+    if not credential:
+       raise InvalidPayload()
+
+    try:
+        # Specify the CLIENT_ID of the app that accesses the backend:
+        idinfo = id_token.verify_oauth2_token(credential, requests.Request(), current_app.config.get('GOOGLE_CLIENT_ID'))
+        google_id = idinfo['sub']
+        google_email = idinfo['email']
+        google_given_name = idinfo['given_name']
+        google_family_name = idinfo['family_name']
+        google_email_verified = idinfo['email_verified']
+
+    except Exception:
+        raise UnauthorizedException()
+    
+    google_user = User.first(User.google_id == google_id)
+    if not google_user:
+        # Not an existing user so get info, register and login
+        user = User.first(User.email == google_email)
+        code = 200
+        with session_scope(db.session) as session:
+            if user:
+                user.google_access_token = credential
+                user.google_id = google_id
+            else:
+                # Create the user and insert it into the database
+                user = User(email=google_email,
+                            given_name=google_given_name,
+                            family_name=google_family_name,
+                            google_id=google_id,
+                            google_access_token=credential,
+                            email_validation_date= datetime.utcnow() if google_email_verified else None)
+                
+                session.add(user)
+                code = 201
+        # generate auth token
+        auth_token = user.encode_auth_token()
+        return {
+            'status': 'success',
+            'message': 'Successfully google user registered.',
+            'auth_token': auth_token
+        }, code
+    else:
+        auth_token = google_user.encode_auth_token()
+        with session_scope(db.session):
+            google_user.google_access_token = credential
+            google_user.email_validation_date= datetime.utcnow() if google_email_verified else None
+        return {
+            'status': 'success',
+            'message': 'Successfully facebook login.',
+            'auth_token': auth_token
+        }
+    
+
 @auth_blueprint.route('/auth/facebook/login', methods=['POST'])
 @accept('application/json')
 def facebook_login():
@@ -268,7 +360,7 @@ def facebook_login():
         return {
             'status': 'success',
             'message': 'Successfully facebook registered.',
-            'auth_token': auth_token.decode()
+            'auth_token': auth_token
         }, code
     else:
         auth_token = fb_user.encode_auth_token()
@@ -277,7 +369,7 @@ def facebook_login():
         return {
             'status': 'success',
             'message': 'Successfully facebook login.',
-            'auth_token': auth_token.decode()
+            'auth_token': auth_token
         }
 
 
@@ -289,10 +381,9 @@ def set_standalone_user(user_id: int):
     post_data = request.get_json()
     if not post_data:
         raise InvalidPayload()
-    username = post_data.get('username')
     pw_old = post_data.get('old_password')
     pw_new = post_data.get('new_password')
-    if not username or not pw_old or not pw_new:
+    if not pw_old or not pw_new:
         raise InvalidPayload()
 
     # fetch the user data
@@ -304,15 +395,10 @@ def set_standalone_user(user_id: int):
     user = User.get(user_id)
     if not bcrypt.check_password_hash(user.password, pw_old):
         raise NotFoundException(message='Invalid password. Please try again.')
-
-    if not User.first(User.username == username):
-        with session_scope(db.session):
-            user.username = username
-            user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
-        return {
-            'status': 'success',
-            'message': 'Successfully changed password.',
-        }
-    else:
-        raise BusinessException(message='Sorry. That username already exists, choose another username')
+    with session_scope(db.session):
+        user.password = bcrypt.generate_password_hash(pw_new, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+    return {
+        'status': 'success',
+        'message': 'Successfully changed password.',
+    }
 
