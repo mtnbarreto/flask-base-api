@@ -33,6 +33,8 @@ class BaseConfig:
     SENTRY_DSN = 'Sentry_DNS'
     FCM_SERVER_KEY = os.environ.get('FCM_SERVER_KEY')
     ITEMS_PER_PAGE = 20
+    TEMPLATES_AUTO_RELOAD = True
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration"""
@@ -63,3 +65,4 @@ class ProductionConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
     SENTRY_DSN = 'Sentry_DNS'
+    TEMPLATES_AUTO_RELOAD = None

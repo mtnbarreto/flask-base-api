@@ -35,11 +35,11 @@ def push_echo(user_id: int):
     # from project.api.common.utils.constants import Constants
     # we can also send a notification to a group
     # event = Event(event_descriptor_id=Constants.EventDescriptorIds.SEED_EVENT_ID)
-    # creator = User.get(user_id)
+    # user = User.get(user_id)
     # event.creator = creator
     # event.group = Group.get(1)
-    # event.entity_id = creator.id
-    # event.entity_description = creator.username
+    # event.entity_id = user.id
+    # event.entity_description = user.username or user.email
     # event.entity_type = "User"
     # db.session.add(event)
     # db.session.commit()
@@ -53,15 +53,14 @@ def add_user(_):
     post_data = request.get_json()
     if not post_data:
         raise InvalidPayload()
-    username = post_data.get('username')
     email = post_data.get('email')
     password = post_data.get('password')
 
     try:
-        user = User.first(or_(User.username == username, User.email == email))
+        user = User.first(User.email == email)
         if not user:
-            userModel = User(username=username, email=email, password=password)
-            db.session.add(userModel)
+            user = User(email=email, password=password)
+            db.session.add(user)
             db.session.commit()
             response_object = {
                 'status': 'success',
@@ -69,7 +68,7 @@ def add_user(_):
             }
             return response_object, 201
         else:
-            raise BusinessException(message='Sorry. That email or username already exists.')
+            raise BusinessException(message='Sorry. That email already exists.')
     except (exc.IntegrityError, ValueError):
         db.session.rollback()
         raise InvalidPayload()

@@ -16,13 +16,11 @@ class TestGroupModel(BaseTestCase):
         self.assertEqual(len(group.users), 0)
 
     def test_associated_users(self):
-        user = add_user(username="test", email="test@test.com1", password="test")
+        user = add_user(email="test@test.com", password="test")
         group = add_group(name="test_name")
         self.assertEqual(len(group.associated_users), 0)
         add_user_group_association(user=user, group=group)
         self.assertEqual(len(group.associated_users), 1)
-        self.assertEqual(group.associated_users[0].user.username, "test")
         self.assertEqual(len(group.users), 1)
-        self.assertEqual(group.users[0].username, "test")
         self.assertEqual(len(user.groups), 1)
         self.assertEqual(user.groups[0].name, "test_name")

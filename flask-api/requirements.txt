@@ -27,3 +27,4 @@ facepy==1.0.12                # Facepy makes it really easy to use Facebook's Gr
 pyfcm==1.5.4                  # Python client for FCM - Firebase Cloud Messaging (Android, iOS and Web)
 flask-accept==0.0.6           # Custom Accept header routing support for Flask
 orjson==3.8.12
+google-auth==2.19.0

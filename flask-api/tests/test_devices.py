@@ -12,7 +12,7 @@ class TestDevicesBlueprint(BaseTestCase):
 
     def test_device_registration(self):
         with self.client:
-            user = add_user('test', 'test@test.com', 'test', roles=UserRole.USER)
+            user = add_user(email='test@test.com', password='test', roles=UserRole.USER)
             resp_login = self.client.post(
                 '/v1/auth/login',
                 data=json.dumps(dict(
@@ -49,8 +49,8 @@ class TestDevicesBlueprint(BaseTestCase):
     def test_login_with_same_device_id(self):
         """Test that device is removed and added to new device logged user."""
         with self.client:
-            user1 = add_user('test', 'test@test.com', 'test', roles=UserRole.USER)
-            user2 = add_user('test2', 'test2@test.com', 'test', roles=UserRole.USER)
+            user1 = add_user(email='test@test.com', password='test', roles=UserRole.USER)
+            user2 = add_user(email='test2@test.com', password='test', roles=UserRole.USER)
             device_id = uuid.uuid4().hex
             self.client.post(
                 '/v1/auth/login',
@@ -84,8 +84,8 @@ class TestDevicesBlueprint(BaseTestCase):
 
     def test_duplicate_device_registration_with_different_users(self):
         with self.client:
-            user1 = add_user('test', 'test@test.com', 'test', roles=UserRole.USER)
-            user2 = add_user('test2', 'test2@test.com', 'test', roles=UserRole.USER)
+            user1 = add_user(email='test@test.com', password='test', roles=UserRole.USER)
+            user2 = add_user(email='test2@test.com', password='test', roles=UserRole.USER)
             device_id = uuid.uuid4().hex
             resp_login = self.client.post(
                 '/v1/auth/login',
@@ -144,7 +144,7 @@ class TestDevicesBlueprint(BaseTestCase):
             self.assertEqual(user2.devices[0].user_id, user2.id)
 
     def test_logout_makes_device_inactive(self):
-        user = add_user('test', 'test@test.com', 'test')
+        user = add_user(email='test@test.com', password='test')
         self.assertEqual(len(user.devices), 0)
         device_id = uuid.uuid4().hex
         with self.client:

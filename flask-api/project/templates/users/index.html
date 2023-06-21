@@ -20,9 +20,6 @@
           <hr><br>
           <form action="/" method="POST">
             <div class="form-group">
-              <input name="username" class="form-control input-lg" type="text" placeholder="Enter a username" required>
-            </div>
-            <div class="form-group">
               <input name="email" class="form-control input-lg" type="email" placeholder="Enter an email address" required>
             </div>
             <input type="submit" class="btn btn-primary btn-lg btn-block" value="Submit">
@@ -32,7 +29,7 @@
           <div>
             {% if users %}
               {% for user in users %}
-                <h4 class="well"><strong>{{user.username}}</strong> - <em>{{user.created_at.strftime('%Y-%m-%d')}}</em></h4>
+                <h4 class="well"><strong>{{user.email}}</strong> - <em>{{user.created_at.strftime('%Y-%m-%d')}}</em></h4>
               {% endfor %}
             {% else %}
               <p>No users!</p>

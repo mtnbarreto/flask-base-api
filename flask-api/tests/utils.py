@@ -11,9 +11,9 @@ from project.models.user_group_association import UserGroupAssociation
 
 
 
-def add_user(username: str, email: str, password: str, cellphone_number: str=None, cellphone_cc: str=None,
+def add_user(email: str, password: str, cellphone_number: str=None, cellphone_cc: str=None,
              created_at:datetime=datetime.datetime.utcnow(), roles:UserRole=UserRole.USER):
-    user = User(username=username, email=email, password=password, cellphone_number=cellphone_number,
+    user = User(email=email, password=password, cellphone_number=cellphone_number,
                 cellphone_cc=cellphone_cc, created_at=created_at, roles=roles)
     db.session.add(user)
     db.session.commit()

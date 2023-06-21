@@ -153,7 +153,9 @@ it should output something like this:
   "status":"success",
   "message":"Successfully logged in.",
   "auth_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODY2NzU2MzMsImlhdCI6MTY4NDA4MzYzMywic3ViIjoxfQ.t8QKjoNfP3GuCLpCLVW-sPeEynHtX8Vk7DaOfVn0tWU",
-  "username":"martin"
+  "email": "a@a.com"
+  "given_name": "Martin",
+  "family_name": "Barreto"
 }
 ```
 

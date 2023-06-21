@@ -20,11 +20,11 @@ class UserRole(IntFlag):
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    first_name = db.Column(db.String(128))
-    last_name = db.Column(db.String(128))
+    given_name = db.Column(db.String(128))
+    family_name = db.Column(db.String(128))
     cellphone_number = db.Column(db.String(128))
     cellphone_cc = db.Column(db.String(16))  # cellphone_country_code
-    username = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(128), unique=True, nullable=True)
     email = db.Column(db.String(128), unique=True, nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     roles = db.Column(db.Integer, default=UserRole.USER.value, nullable=False)
@@ -32,6 +32,8 @@ class User(db.Model):
     token_hash = db.Column(db.String(255), nullable=True)
     email_token_hash = db.Column(db.String(255), nullable=True)
     email_validation_date = db.Column(db.DateTime, nullable=True)
+    google_id = db.Column(db.String(64), unique=True, nullable=True)  # null if never logged in google
+    google_access_token = db.Column(db.String, nullable=True)
     fb_id = db.Column(db.String(64), unique=True, nullable=True)  # null if never logged in facebook
     fb_access_token = db.Column(db.String, nullable=True)
     cellphone_validation_code = db.Column(db.String(4))
@@ -39,24 +41,19 @@ class User(db.Model):
     cellphone_validation_date = db.Column(db.DateTime, nullable=True)
     
     refer_to_friend_link = db.Column(db.String)
-    instagram_link = db.Column(db.String, nullable=True)
-    shopify_link = db.Column(db.String, nullable=True)
-    pinterest_link = db.Column(db.String, nullable=True)
-    tiktok_link = db.Column(db.String, nullable=True)
-    website_url = db.Column(db.String, nullable=True)
-    company_name = db.Column(db.String, nullable=True)
 
     associated_groups = db.relationship("UserGroupAssociation", back_populates="user")
     groups = association_proxy('associated_groups', 'group')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, username: str, email: str, password:str=None, cellphone_number:str=None, cellphone_cc:str=None,
+    def __init__(self, email:str, password:str=None, given_name: str=None, family_name:str=None, cellphone_number:str=None, cellphone_cc:str=None,
                  email_validation_date=None, fb_id:str=None, fb_access_token:str=None, cellphone_validation_code:str=None,
                  cellphone_validation_code_expiration:datetime=None,
                  cellphone_validation_date:datetime=None, roles:UserRole=UserRole.USER, created_at:datetime=datetime.utcnow()):
-        self.username = username
         self.email = email
+        self.given_name = given_name
+        self.family_name = family_name
         if password:
             self.password = bcrypt.generate_password_hash(password,
                                                           current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
@@ -73,7 +70,7 @@ class User(db.Model):
         self.roles = roles.value
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<User %r>' % self.email
 
     @staticmethod
     def first_by(**kwargs):
