@@ -1,0 +1,46 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - Flaskr</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script type="text/javascript">
+  function google_auth_callback(response){
+    console.log(response);
+    fetch(window.location.origin + "/v1/auth/google/login", {
+    method: 'post',
+    body: JSON.stringify(response),
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+    }).then((res) => {
+        console.log(res.body);
+        return respresonse.json()
+    }).then((res) => {
+        if (res.status === 201) {
+            console.log("Post successfully created!")
+        }
+    }).catch((error) => {
+        console.log(error)
+    })
+  }
+</script>
+<nav>
+  <h1>Flask Base API</h1>
+  <ul>
+    {% if g.user %}
+      <li><span>{{ g.user['email'] }}</span>
+      <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
+    {% else %}
+      <li><a href="{{ url_for('auth.get_login') }}">Log In</a>
+    {% endif %}
+  </ul>
+</nav>
+<section class="content">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</section>

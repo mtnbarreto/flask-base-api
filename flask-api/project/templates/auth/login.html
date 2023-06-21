@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Log In{% endblock %}</h1>
+  <h2>{{ config }}</h2>
+{% endblock %}
+
+{% block content %}  
+  <!-- data-login_uri= "http://localhost/v1/auth/google/login" -->
+  <div id="g_id_onload"
+     data-client_id="{{ config["GOOGLE_CLIENT_ID"] }}"
+     data-context="signin"
+     data-ux_mode="popup"
+     data-callback="google_auth_callback"
+     data-auto_select="false"
+     data-itp_support="true">
+  </div>
+
+  <div class="g_id_signin"
+     data-type="standard"
+     data-shape="rectangular"
+     data-theme="filled_black"
+     data-text="signin_with"
+     data-size="large"
+     data-logo_alignment="left">
+  </div>
+{% endblock %}
+
+

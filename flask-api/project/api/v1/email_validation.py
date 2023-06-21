@@ -35,7 +35,7 @@ def email_verification(user_id):
             user.email_token_hash = bcrypt.generate_password_hash(token, current_app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         if not current_app.testing:
             from project.api.common.utils.mails import send_email_verification_email
-            send_email_verification_email(user, token.decode())  # send recovery email
+            send_email_verification_email(user, token)  # send recovery email
         return {
             'status': 'success',
             'message': 'Successfully sent email with email verification.',

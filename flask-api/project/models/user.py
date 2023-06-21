@@ -47,8 +47,8 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, email:str, password:str=None, given_name: str=None, family_name:str=None, cellphone_number:str=None, cellphone_cc:str=None,
-                 email_validation_date=None, fb_id:str=None, fb_access_token:str=None, cellphone_validation_code:str=None,
+    def __init__(self, email:str, password:str=None, given_name:str=None, family_name:str=None, cellphone_number:str=None, cellphone_cc:str=None,
+                 email_validation_date:datetime=None, google_id:str=None, google_access_token:str=None, fb_id:str=None, fb_access_token:str=None, cellphone_validation_code:str=None,
                  cellphone_validation_code_expiration:datetime=None,
                  cellphone_validation_date:datetime=None, roles:UserRole=UserRole.USER, created_at:datetime=datetime.utcnow()):
         self.email = email
@@ -64,6 +64,8 @@ class User(db.Model):
         self.email_validation_date = email_validation_date
         self.fb_id = fb_id
         self.fb_access_token = fb_access_token
+        self.google_id = google_id
+        self.google_access_token = google_access_token
         self.cellphone_validation_code = cellphone_validation_code
         self.cellphone_validation_code_expiration = cellphone_validation_code_expiration
         self.cellphone_validation_date = cellphone_validation_date
